@@ -127,11 +127,11 @@ public class Graph {
 		return distance;
 	}
 	
-	public String getId(int id_num){//通过数组下标来查找节点的Id
+	public String getId(int id_num){//通过int类型的数组下标来查找节点的String类型Id
 		return nodelist.get(id_num).ID;
 	}
 	
-	public int getNum(String id){//通过节点的Id来查找邻接矩阵的下标
+	public int getNum(String id){//通过节点的String类型Id来查找邻接矩阵的int类型下标
 		int index=-1;
 		
 		for(Node temp:nodelist){
@@ -174,7 +174,7 @@ public class Graph {
 	}
 	
 	
-	public ArrayList<Integer> Dijkstra_prototype(int start){//迪杰斯特拉算法原型，直接根据邻接矩阵计算起点到图中所有节点的最短路径。
+	public ArrayList<Integer> Dijkstra_prototype(int start){//迪杰斯特拉算法原型，输入参数为起点在nodelist中的index，直接根据邻接矩阵计算起点到图中所有节点的最短路径。
 		int[][] mat=this.constructDelayAdjMatrix();
 		ArrayList<Integer> output=new ArrayList<Integer>();
 		
@@ -214,8 +214,8 @@ public class Graph {
 	}
 	
 	public void printPath(String src,String dst){//打印从src岛dst节点所经过的最短路径中的所有节点
-		int start=getNum(src);
-		int end=getNum(dst);
+		int start=getNum(src);//获取src在nodelist中的下标
+		int end=getNum(dst);//获取dst在nodelist中的下标
 		ArrayList<Integer> result=Dijkstra_prototype(start);
 		result.add(getNum(dst));
 		if(result.contains(end)){
