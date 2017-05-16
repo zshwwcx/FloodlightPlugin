@@ -237,6 +237,11 @@ public class Graph {
 		
 	}
 	
+	public void allocateBandwidth(String src,String dst,int bandwidth_request,int delay_request){//带宽分配函数，以带宽和延迟作为分配标准
+		
+		
+	}
+	
 	/*
 	public ArrayList<String> get_shortest_path(String src_point,String dst_point){//获取从源节点到目的节点的最短最优路径(按照延迟来计算)，这里的返回类型可以讨论一下，后续需要用于流表规则的下发
 		Node src_node=getNode(src_point);
@@ -320,7 +325,7 @@ public class Graph {
 		else
 			System.out.println("Didn't find the node.\n\n");
 		
-		//g1.get_shortest_path("00:00:00:00:00:00:00:01","00:00:00:00:00:00:00:04");
+		
 		int[][] output_matrix=g1.constructDelayAdjMatrix();//测试邻接矩阵的建立情况，成功
 		for(int m=0;m<output_matrix.length;m++){
 			System.out.print("[");
@@ -330,7 +335,7 @@ public class Graph {
 			System.out.println("]\n");
 		}
 		
-		ArrayList<Integer> out=g1.Dijkstra_prototype(3);
+		ArrayList<Integer> out=g1.Dijkstra_prototype(3);//测试单域情况中，路由算法的有效性
 		for(Integer i:out){
 			System.out.print(i+"->");
 			
