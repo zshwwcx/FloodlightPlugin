@@ -220,12 +220,51 @@ public class Graph {
 		result.add(getNum(dst));
 		if(result.contains(end)){
 			int end_index=result.indexOf(end);
-			System.out.println("The path from "+"\""+src+"\""+" to \""+dst+"\""+" is:");
-			for(int i=0;i<end_index;i++){
-				System.out.print(getId(result.get(i))+"->");	
+			//result.add(0, start);
+			for(int i=end_index+1;i<result.size();i++){
+				result.remove(i);
 			}
-			System.out.print(dst);
+			System.out.println("The path from "+"\""+src+"\""+" to \""+dst+"\""+" is:");
+			for(int i=0;i<result.size();i++){
+				System.out.print(getId(result.get(i))+"==>");	
+			}
+			System.out.print("end");
 		}
+	}
+	
+	public ArrayList<Integer> getIndexPath(String src,String dst){//得到从src到dst最短路径所需要经过的所有节点的index
+		int start=getNum(src);//获取src在nodelist中的下标
+		int end=getNum(dst);//获取dst在nodelist中的下标
+		ArrayList<Integer> result=Dijkstra_prototype(start);
+		result.add(getNum(dst));
+		if(result.contains(end)){
+			int end_index=result.indexOf(end);
+			//result.add(0, start);
+			for(int i=end_index+1;i<result.size();i++){
+				result.remove(i);
+			}
+			return result;
+		}
+		else
+			return null;
+	}
+	
+	public ArrayList<String> getStringPath(String src,String dst){//得到从src到dst最短路径所需要经过的所有节点的String
+		int start=getNum(src);//获取src在nodelist中的下标
+		int end=getNum(dst);//获取dst在nodelist中的下标
+		ArrayList<Integer> result=Dijkstra_prototype(start);
+		ArrayList<String> StringResult=new ArrayList<String>();
+		result.add(getNum(dst));
+		if(result.contains(end)){
+			int end_index=result.indexOf(end);
+			//result.add(0, start);
+			for(int i=0;i<=end_index;i++){
+				StringResult.add(getId(result.get(i)));
+			}
+			return StringResult;
+		}
+		else
+			return null;
 	}
 	
 	
@@ -237,8 +276,20 @@ public class Graph {
 		
 	}
 	
+	public int getDistance(String src,String dst){//获取从src到达dst的路径的最短延迟
+		int distance=0;
+		ArrayList<String> path=this.getStringPath(src, dst);
+		for(int i=0;i<path.size()-1;i++){
+			distance+=this.getDirectDistance(path.get(i), path.get(i+1));
+		}
+		return distance;
+	}
+	
+	
 	public void allocateBandwidth(String src,String dst,int bandwidth_request,int delay_request){//带宽分配函数，以带宽和延迟作为分配标准
 		
+		
+		this.getStringPath(src, dst);
 		
 	}
 	
@@ -342,7 +393,13 @@ public class Graph {
 		}
 		System.out.println("End");
 		
-		g1.printPath("00:00:da:c5:01:a3:44:48", "00:00:00:00:00:00:00:03");
+		g1.printPath("00:00:00:00:00:00:00:03", "00:00:da:c5:01:a3:44:48");
+		
+		System.out.println("");
+		
+		
+		int t=g1.getDistance("00:00:00:00:00:00:00:03", "00:00:da:c5:01:a3:44:48");
+		System.out.println("Distance from source to destination is:"+t);
 
 	}
 	
