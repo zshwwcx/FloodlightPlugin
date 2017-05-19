@@ -52,8 +52,52 @@ class Node{
 		
 }
 
+class Link{
+	public String start_switch;
+	public String end_switch;
+	public int delay;
+	
+	public Link(String start_id,String end_id,int link_delay){//初始化Link信息
+		this.start_switch=start_id;
+		this.end_switch=end_id;
+		this.delay=link_delay;
+	}
+	
+	public Link(){
+		this.start_switch="";
+		this.end_switch="";
+		this.delay=0;
+	}
+	
+	public String getLinkStart(){//获取当前Link的前节点，因为每条link都是有序的，从某个节点到某个节点，Link的开始就是前节点，后面的即为后节点
+		return this.start_switch;
+	}
+	
+	public String getLinkEnd(){//获取当前Link的后节点
+		return this.end_switch;
+	}
+	
+	public int getLinkDelay(){
+		return this.delay;
+	}
+	
+	public void setStartSwitch(String str){//设置前节点的id
+		this.start_switch=str;
+	}
+	
+	public void setEndSwitch(String str){//设置后节点的id
+		this.end_switch=str;
+	}
+	
+	public void setLinkDelay(int delay_add){//设置Link的delay
+		this.delay=delay_add;
+	}
+	
+}
+
 public class Graph {
 	ArrayList<Node> nodelist=new ArrayList<Node>();//存储图的所有节点信息
+	ArrayList<Link> linklist=new ArrayList<Link>();//存储图的所有link信息
 
 	public Graph(String link_file_path,String clusters_file_path){//初始化图，想通过link和clusters两个文件来进行图的初始化，函数参数用文件的String路径来表示，便于后期修改。
 		try{
@@ -94,6 +138,8 @@ public class Graph {
 						}
 					}
 					
+					this.linklist.add(new Link(info_temp[0],info_temp[1],Integer.parseInt(info_temp[2],16)));
+					
 					}
 				read2.close();
 			}	
@@ -107,6 +153,15 @@ public class Graph {
 		for(Node node:this.nodelist){
 			if(node.ID.equals(node_id))
 				return node;
+		}
+		return null;
+	}
+	
+	public Link getLink(String start_switch,String end_switch){//根据两个节点获取Link
+		for(Link tmp:this.linklist){
+			if(tmp.getLinkStart().equals(start_switch)&&tmp.getLinkEnd().equals(end_switch)){
+				return tmp;
+			}
 		}
 		return null;
 	}
