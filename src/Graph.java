@@ -159,6 +159,7 @@ class Flow_request{
 public class Graph {
 	ArrayList<Node> nodelist=new ArrayList<Node>();//存储图的所有节点信息
 	ArrayList<Link> linklist=new ArrayList<Link>();//存储图的所有link信息
+	ArrayList<Flow_request> flowRequestList=new ArrayList<Flow_request>();//存储需要进行TE的所有流需求
 
 	public Graph(String link_file_path,String clusters_file_path){//初始化图，想通过link和clusters两个文件来进行图的初始化，函数参数用文件的String路径来表示，便于后期修改。
 		try{
@@ -403,6 +404,29 @@ public class Graph {
 		return distance;
 	}
 	
+	public void CollectFlowRequest(String FlowRequestFilePath){//读取产生的流量请求，将其存入到flowRequestList列表中,暂定每5min一次
+		//File的格式为每条流的请求为一行，分别为（1）源地址（2）目的地址（3）带宽要求（4）延迟要求（5）优先级,变量之间用空格符分隔开
+		this.flowRequestList.clear();//执行列表的清理，防止上次收集过程中的数据残存在本次的列表中。
+		try{
+			String encoding="utf-8";
+			File file_in=new File(FlowRequestFilePath);
+			if(file_in.isFile()&&file_in.exists()){
+				InputStreamReader read=new InputStreamReader(new FileInputStream(file_in),encoding);
+				BufferedReader bufferReader=new BufferedReader(read);
+				String lineTxt=null;
+				while((lineTxt=bufferReader.readLine())!=null){				
+					String[] info_temp=lineTxt.split(" ");
+					flowRequestList.add(new Flow_request(info_temp[0],info_temp[1],info_temp[2],info_temp[3],info_temp[4]);
+					}
+				read.close();
+			}
+		}catch(Exception e){
+			System.out.println("Error:读取数据流请求文件出错！");
+			e.printStackTrace();
+		}
+	}
+	
+	
 	
 	public void allocateBandwidth(String src,String dst,int bandwidth_request,int delay_request){//带宽分配函数，以带宽和延迟作为分配标准
 		
@@ -411,7 +435,7 @@ public class Graph {
 		
 	}
 	
-	public void TE(String FlowRequestFilePath){//File的格式为每条流的请求为一行，分别为（1）源地址（2）目的地址（3）流量请求（4）带宽要求（5）延迟要求（6）优先级,变量之间用空格符分隔开
+	public void TE(String FlowRequestFilePath){
 		
 		
 		
@@ -423,7 +447,9 @@ public class Graph {
 				BufferedReader bufferReader=new BufferedReader(read);
 				String lineTxt=null;
 				while((lineTxt=bufferReader.readLine())!=null){				
-					addNode(new Node((String)lineTxt));
+					String[] info_temp=lineTxt.split(" ");
+					
+					flowRequestList.add(new Flow_request(info_temp[0],info_temp[1],info_temp[2],info_temp[3])
 					}
 				read.close();
 			}
