@@ -95,6 +95,25 @@ class Link{
 	
 }
 
+class Flow_request{
+	String src_id;
+	String dst_id;
+	int bandwidth_request;
+	int delay_request;
+	int priority;
+	
+	public Flow_request(String src,String dst,int bandwidth,int delay,int priority){
+		this.src_id=src;
+		this.dst_id=dst;
+		this.bandwidth_request=bandwidth;
+		
+	}
+	
+	
+	
+}
+
+
 public class Graph {
 	ArrayList<Node> nodelist=new ArrayList<Node>();//存储图的所有节点信息
 	ArrayList<Link> linklist=new ArrayList<Link>();//存储图的所有link信息
@@ -221,13 +240,15 @@ public class Graph {
 		return matrix;
 	}
 	
-	public int[][] constructBandwidthMatrix(){//构造图的带宽矩阵，用于QoS以及TE算法
+	
+	/*
+	public int[][] constructBandwidthMatrix(){//构造图的带宽矩阵，用于QoS以及TE算法，还没有写好
 		int[][] bandwidth_matrix=new int[nodelist.size()][nodelist.size()];
 			
 		
 		return bandwidth_matrix;
 	}
-	
+	*/
 	
 	public ArrayList<Integer> Dijkstra_prototype(int start){//迪杰斯特拉算法原型，输入参数为起点在nodelist中的index，直接根据邻接矩阵计算起点到图中所有节点的最短路径。
 		int[][] mat=this.constructDelayAdjMatrix();
@@ -284,7 +305,7 @@ public class Graph {
 				System.out.print(getId(result.get(i))+"==>");	
 			}
 			System.out.print("end");
-		}
+		} 
 	}
 	
 	public ArrayList<Integer> getIndexPath(String src,String dst){//得到从src到dst最短路径所需要经过的所有节点的index
@@ -346,6 +367,28 @@ public class Graph {
 		
 		this.getStringPath(src, dst);
 		
+	}
+	
+	public void TE(String FlowRequestFilePath){//File的格式为每条流的请求为一行，分别为（1）源地址（2）目的地址（3）流量请求（4）带宽要求（5）延迟要求（6）优先级,变量之间用空格符分隔开
+		
+		
+		
+		try{
+			String encoding="utf-8";
+			File file_in=new File(FlowRequestFilePath);
+			if(file_in.isFile()&&file_in.exists()){
+				InputStreamReader read=new InputStreamReader(new FileInputStream(file_in),encoding);
+				BufferedReader bufferReader=new BufferedReader(read);
+				String lineTxt=null;
+				while((lineTxt=bufferReader.readLine())!=null){				
+					addNode(new Node((String)lineTxt));
+					}
+				read.close();
+			}
+		}catch(Exception e){
+			System.out.println("Error:读取数据流请求文件出错！");
+			e.printStackTrace();
+		}
 	}
 	
 	/*
