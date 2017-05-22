@@ -6,154 +6,13 @@ import java.io.*;
 */
 
 
-/*邻接节点链表信息*/
-class adj_info{
-		public String adj_id;
-		public int adj_bandwidth;
-		public int adj_delay;
-		
-		public adj_info(String id,int bw,int dl){
-			this.adj_id=id;
-			this.adj_bandwidth=bw;
-			this.adj_delay=dl;
-		}
-		
-		public adj_info(){
-			this.adj_id="ff:ff:ff:ff:ff:ff:ff:ff";
-			this.adj_bandwidth=99999;
-			this.adj_delay=99999;
-		}
-		
-}
-
-
-/*图中的每个节点*/
-class Node{
-		public String ID;
-		public ArrayList<adj_info> adjcent_list=new ArrayList<adj_info>();//节点的邻接链表
-		
-		public Node(String id){//初始化节点信息
-			this.ID=id;	
-		}
-		
-		public void add_adj_node(adj_info id){//为节点天界邻接节点信息
-			this.adjcent_list.add(id);
-		}
-		
-		public int has_link_to(String dst_node){
-			for(adj_info node_temp :adjcent_list){
-				if(node_temp.adj_id.equals(dst_node)){
-					return adjcent_list.indexOf(node_temp);
-				}
-			}
-			return 0;
-		}
-		
-		
-}
-
-class Link{
-	public String start_switch;
-	public String end_switch;
-	public int delay;
-	
-	public Link(String start_id,String end_id,int link_delay){//初始化Link信息
-		this.start_switch=start_id;
-		this.end_switch=end_id;
-		this.delay=link_delay;
-	}
-	
-	public Link(){
-		this.start_switch="";
-		this.end_switch="";
-		this.delay=0;
-	}
-	
-	public String getLinkStart(){//获取当前Link的前节点，因为每条link都是有序的，从某个节点到某个节点，Link的开始就是前节点，后面的即为后节点
-		return this.start_switch;
-	}
-	
-	public String getLinkEnd(){//获取当前Link的后节点
-		return this.end_switch;
-	}
-	
-	public int getLinkDelay(){
-		return this.delay;
-	}
-	
-	public void setStartSwitch(String str){//设置前节点的id
-		this.start_switch=str;
-	}
-	
-	public void setEndSwitch(String str){//设置后节点的id
-		this.end_switch=str;
-	}
-	
-	public void setLinkDelay(int delay_add){//设置Link的delay
-		this.delay=delay_add;
-	}
+class AllocatedRoutePath{
+	Map<Link,Integer>  allocated_info=new HashMap<Link,Integer>();
 	
 }
 
-class Flow_request{
-	private String src_id;
-	private String dst_id;
-	int bandwidth_request;
-	private int delay_request;
-	private int priority;
-	
-	public Flow_request(String src,String dst,int bandwidth,int delay,int priority){
-		this.src_id=src;
-		this.dst_id=dst;
-		this.bandwidth_request=bandwidth;
-		
-	}
-	
-	public Flow_request(){
-		
-	}
-	
-	public void setSrcId(String src){
-		this.src_id=src;
-	}
-	
-	public void setDstId(String dst){
-		this.dst_id=dst;
-	}
-	
-	public void setBandwidthRequest(int bd){
-		this.bandwidth_request=bd;
-	}
-	
-	public void setDelayRequest(int dl){
-		this.delay_request=dl;
-	}
-	
-	public void setPriority(int pr){
-		this.priority=pr;
-	}
-	
-	public String getSrcId(){
-		return this.src_id;
-	}
-	
-	public String getDstId(){
-		return this.dst_id;
-	}
-	
-	public int getBandwidthRequest(){
-		return this.bandwidth_request;
-	}
-	
-	public int getDelayRequest(){
-		return this.delay_request;
-	}
-	
-	public int getPriority(){
-		return this.priority;
-	}
-	
-}
+
+
 
 
 public class Graph {
@@ -191,7 +50,7 @@ public class Graph {
 
 					int adj_bandwidth=Integer.parseInt(info_temp[3], 10);
 					
-					adj_info adj_new=new adj_info(adj_id,adj_bandwidth,adj_delay);
+					AdjInfo adj_new=new AdjInfo(adj_id,adj_bandwidth,adj_delay);
 					
 					for(Node tmp:this.nodelist){
 						if(tmp.ID.equals(initial_id)){
@@ -235,7 +94,7 @@ public class Graph {
 	public int getDirectDistance(String src,String dst){//获取两个由Link直接相连的节点之间的距离,如果两个节点没有直接link相连，返回的距离为-1
 		int distance=-1;
 		if(getNode(src)!=null){
-			for(adj_info temp:getNode(src).adjcent_list){
+			for(AdjInfo temp:getNode(src).adjcent_list){
 				if(temp.adj_id.equals(dst)){
 					distance=temp.adj_delay;
 				}
@@ -275,7 +134,7 @@ public class Graph {
 		for(Node node:nodelist){
 			int start=nodelist.indexOf(node);
 			int end=-1;
-			for(adj_info info:node.adjcent_list){
+			for(AdjInfo info:node.adjcent_list){
 				end=nodelist.indexOf(getNode(info.adj_id));
 				matrix[start][end]=info.adj_delay;
 			}
@@ -416,7 +275,7 @@ public class Graph {
 				String lineTxt=null;
 				while((lineTxt=bufferReader.readLine())!=null){				
 					String[] info_temp=lineTxt.split(" ");
-					flowRequestList.add(new Flow_request(info_temp[0],info_temp[1],info_temp[2],info_temp[3],info_temp[4]);
+					flowRequestList.add(new Flow_request(info_temp[0],info_temp[1],Integer.parseInt(info_temp[2]),Integer.parseInt(info_temp[3]),Integer.parseInt(info_temp[4])));
 					}
 				read.close();
 			}
@@ -427,78 +286,35 @@ public class Graph {
 	}
 	
 	
-	
+	/*
 	public void allocateBandwidth(String src,String dst,int bandwidth_request,int delay_request){//带宽分配函数，以带宽和延迟作为分配标准
 		
 		
 		this.getStringPath(src, dst);
 		
 	}
+	*/
 	
-	public void TE(String FlowRequestFilePath){
-		
-		
-		
-		try{
-			String encoding="utf-8";
-			File file_in=new File(FlowRequestFilePath);
-			if(file_in.isFile()&&file_in.exists()){
-				InputStreamReader read=new InputStreamReader(new FileInputStream(file_in),encoding);
-				BufferedReader bufferReader=new BufferedReader(read);
-				String lineTxt=null;
-				while((lineTxt=bufferReader.readLine())!=null){				
-					String[] info_temp=lineTxt.split(" ");
-					
-					flowRequestList.add(new Flow_request(info_temp[0],info_temp[1],info_temp[2],info_temp[3])
-					}
-				read.close();
+	public void LocalTE(){
+		while(true){
+			try{
+				Thread.sleep(300000);
+			}catch(InterruptedException e){
+				e.printStackTrace();
 			}
-		}catch(Exception e){
-			System.out.println("Error:读取数据流请求文件出错！");
-			e.printStackTrace();
+			}
+		this.CollectFlowRequest(FilePath_TBD);//RequestFilePath需要修改为实际的数据流请求文件
+		
+		for(Flow_request requ:this.flowRequestList){
+			
 		}
 	}
 	
-	/*
-	public ArrayList<String> get_shortest_path(String src_point,String dst_point){//获取从源节点到目的节点的最短最优路径(按照延迟来计算)，这里的返回类型可以讨论一下，后续需要用于流表规则的下发
-		Node src_node=getNode(src_point);
-		ArrayList<String> shortest_path=new ArrayList<String>();//用于函数输出，src_point到达dst_point所途径的所有节点
-		ArrayList<adj_info> copy_adjcent_list=new ArrayList<adj_info>();//复制src_node的邻接链表信息，用于存储当前已知的src可达节点以及相关信息
-		copy_adjcent_list=(ArrayList<adj_info>)src_node.adjcent_list.clone();
-		ArrayList<Node> copy_nodelist=new ArrayList<Node>();//复制Graph的节点列表，用于Dijkstra算法的全集S，将S中离src最近的节点进行松弛（relax）
-		copy_nodelist=(ArrayList<Node>)this.nodelist.clone();
-		Node temp=new Node("Null point");
-		
 
-		int min_distance=9999;//初始化最小距离
-		
-		if((src_node!=null)&&copy_nodelist.contains(src_node)){
-			copy_nodelist.remove(src_node);
-			while(!copy_nodelist.isEmpty()){
-				adj_info temp_info=new adj_info();
-				for(adj_info info:src_node.adjcent_list){
-					if(info.adj_delay<min_distance){
-						min_distance=info.adj_delay;
-						temp=getNode(info.adj_id);
-						temp_info.adj_delay=info.adj_delay+getDirectDistance(src_point,temp_info.adj_id);//延迟为所经过的link所有的delay之和
-						temp_info.adj_bandwidth=info.adj_bandwidth;//带宽应该为所经过的link所有的带宽最小值，但此处要求的是最短路径，暂时不做处理
-					}	
-				}
-				if((copy_nodelist.contains(temp))&&(copy_nodelist.remove(temp))){
-					copy_adjcent_list.add(temp_info);
-					shortest_path.add(temp_info.adj_id);
-					System.out.println(temp_info.adj_id+"\n");
-				}
-			}
-		}
-		
-		return shortest_path;
-	} 
-	*/
 	
 	
 	public void addEdge(String src_point,String dst_point,int delay,int bandwidth){//添加从src到dst的链路
-		adj_info adj_to_add=new adj_info(dst_point,bandwidth,delay);
+		AdjInfo adj_to_add=new AdjInfo(dst_point,bandwidth,delay);
 		for(Node tmp:this.nodelist){
 			if(tmp.ID.equals(src_point)){
 				int index=nodelist.indexOf(tmp);
@@ -507,7 +323,7 @@ public class Graph {
 		}
 	}
 	
-	public void addEdge(String src_point,adj_info adj_info_to_add){//addEdge方法重载
+	public void addEdge(String src_point,AdjInfo adj_info_to_add){//addEdge方法重载
 		for(Node tmp:this.nodelist){
 			if(tmp.ID.equals(src_point)){
 				int index=nodelist.indexOf(tmp);
