@@ -59,7 +59,7 @@ public class Graph {
 						}
 					}
 					
-					this.linklist.add(new Link(info_temp[0],info_temp[1],Integer.parseInt(info_temp[2],16)));
+					this.linklist.add(new Link(initial_id,adj_id,adj_delay,adj_bandwidth));
 					
 					}
 				read2.close();
@@ -142,17 +142,7 @@ public class Graph {
 		return matrix;
 	}
 	
-	
-	/*
-	public int[][] constructBandwidthMatrix(){//构造图的带宽矩阵，用于QoS以及TE算法，还没有写好
-		int[][] bandwidth_matrix=new int[nodelist.size()][nodelist.size()];
-			
-		
-		return bandwidth_matrix;
-	}
-	*/
-	
-	public ArrayList<Integer> Dijkstra_prototype(int start){//迪杰斯特拉算法原型，输入参数为起点在nodelist中的index，直接根据邻接矩阵计算起点到图中所有节点的最短路径。
+	public ArrayList<Integer> dijkstra_prototype(int start){//迪杰斯特拉算法原型，输入参数为起点在nodelist中的index，直接根据邻接矩阵计算起点到图中所有节点的最短路径。
 		int[][] mat=this.constructDelayAdjMatrix();
 		ArrayList<Integer> output=new ArrayList<Integer>();
 		
@@ -191,10 +181,12 @@ public class Graph {
 		return output;
 	}
 	
+	
+	
 	public void printPath(String src,String dst){//打印从src岛dst节点所经过的最短路径中的所有节点
 		int start=getNum(src);//获取src在nodelist中的下标
 		int end=getNum(dst);//获取dst在nodelist中的下标
-		ArrayList<Integer> result=Dijkstra_prototype(start);
+		ArrayList<Integer> result=dijkstra_prototype(start);
 		result.add(getNum(dst));
 		if(result.contains(end)){
 			int end_index=result.indexOf(end);
@@ -213,7 +205,7 @@ public class Graph {
 	public ArrayList<Integer> getIndexPath(String src,String dst){//得到从src到dst最短路径所需要经过的所有节点的index
 		int start=getNum(src);//获取src在nodelist中的下标
 		int end=getNum(dst);//获取dst在nodelist中的下标
-		ArrayList<Integer> result=Dijkstra_prototype(start);
+		ArrayList<Integer> result=dijkstra_prototype(start);
 		result.add(getNum(dst));
 		if(result.contains(end)){
 			int end_index=result.indexOf(end);
@@ -230,7 +222,7 @@ public class Graph {
 	public ArrayList<String> getStringPath(String src,String dst){//得到从src到dst最短路径所需要经过的所有节点的String
 		int start=getNum(src);//获取src在nodelist中的下标
 		int end=getNum(dst);//获取dst在nodelist中的下标
-		ArrayList<Integer> result=Dijkstra_prototype(start);
+		ArrayList<Integer> result=dijkstra_prototype(start);
 		ArrayList<String> StringResult=new ArrayList<String>();
 		result.add(getNum(dst));
 		if(result.contains(end)){
@@ -246,11 +238,13 @@ public class Graph {
 	}
 	
 	
-	public void DijkstarSP(Node src,Node dst){//计算由src节点到dst节点的最短距离
+	
+	
+	public void dijkstarSP(Node src,Node dst){//计算由src节点到dst节点的最短距离
 		
 	}
 	
-	public void DijkstarSP(String src,String dst){//重载最短路径函数，可以直接由节点的名称来计算最短路径
+	public void dijkstarSP(String src,String dst){//重载最短路径函数，可以直接由节点的名称来计算最短路径
 		
 	}
 	
@@ -263,7 +257,7 @@ public class Graph {
 		return distance;
 	}
 	
-	public void CollectFlowRequest(String FlowRequestFilePath){//读取产生的流量请求，将其存入到flowRequestList列表中,暂定每5min一次
+	public void collectFlowRequest(String FlowRequestFilePath){//读取产生的流量请求，将其存入到flowRequestList列表中并初始化,暂定每5min一次
 		//File的格式为每条流的请求为一行，分别为（1）源地址（2）目的地址（3）带宽要求（4）延迟要求（5）优先级,变量之间用空格符分隔开
 		this.flowRequestList.clear();//执行列表的清理，防止上次收集过程中的数据残存在本次的列表中。
 		try{
@@ -285,35 +279,41 @@ public class Graph {
 		}
 	}
 	
-	
-	/*
-	public void allocateBandwidth(String src,String dst,int bandwidth_request,int delay_request){//带宽分配函数，以带宽和延迟作为分配标准
-		
-		
-		this.getStringPath(src, dst);
-		
+	public void dijkstra_flow_request_path_write(Flow_request fr){//为每一条数据流请求进行纯延迟最短路径计算，分配最短路径
+		ArrayList<String> path_node=this.getStringPath(fr.src_id, fr.dst_id);
+		Link tmp=new Link();
+		for(int i=0;i<(path_node.size()-1);i++){
+			tmp=this.getLink(path_node.get(i), path_node.get(i+1));
+			fr.AllocatedPath.add(tmp);
+		}
 	}
-	*/
 	
-	public void LocalTE(){
+	
+	
+	public void localTE(){
 		while(true){
 			try{
-				Thread.sleep(300000);
+				Thread.sleep(300000);//每5min执行一次LocalTE算法
 			}catch(InterruptedException e){
 				e.printStackTrace();
 			}
-			}
-		this.CollectFlowRequest(FilePath_TBD);//RequestFilePath需要修改为实际的数据流请求文件
-		
-		for(Flow_request requ:this.flowRequestList){
 			
+			this.collectFlowRequest("F:\\java code\\FL_PlugIn Project\\Floodlight_plugin\\src\\Flow Request");//RequestFilePath需要修改为实际的数据流请求文件
+			for(Flow_request t:this.flowRequestList){
+				this.dijkstra_flow_request_path_write(t);
+			}
+			
+		
 		}
+		
+		
+		
 	}
 	
 
 	
 	
-	public void addEdge(String src_point,String dst_point,int delay,int bandwidth){//添加从src到dst的链路
+	public void addLink(String src_point,String dst_point,int delay,int bandwidth){//添加从src到dst的链路
 		AdjInfo adj_to_add=new AdjInfo(dst_point,bandwidth,delay);
 		for(Node tmp:this.nodelist){
 			if(tmp.ID.equals(src_point)){
@@ -323,7 +323,7 @@ public class Graph {
 		}
 	}
 	
-	public void addEdge(String src_point,AdjInfo adj_info_to_add){//addEdge方法重载
+	public void addLink(String src_point,AdjInfo adj_info_to_add){//addEdge方法重载
 		for(Node tmp:this.nodelist){
 			if(tmp.ID.equals(src_point)){
 				int index=nodelist.indexOf(tmp);
@@ -334,7 +334,7 @@ public class Graph {
 	
 	
 	//删除link，用于次短路径的计算
-	public void RemoveLink(String src_point,String dst_point){
+	public void removeLink(String src_point,String dst_point){
 		for(Node tmp:this.nodelist){
 			if(tmp.ID.equals(src_point)){
 				int index=tmp.has_link_to(dst_point);
@@ -348,6 +348,8 @@ public class Graph {
 	
 	public static void main(String[] args){
 		Graph g1=new Graph("C:\\Users\\haven\\OneDrive\\科研\\SDN\\拓扑结构\\links","C:\\Users\\haven\\OneDrive\\科研\\SDN\\拓扑结构\\clusters");
+		
+		/*
 		for(Node node_print:g1.nodelist){
 			System.out.println("Node id:"+node_print.ID+"  "+"Adjcant_Node_Number:"+node_print.adjcent_list.size()+"\n");
 			
@@ -368,7 +370,7 @@ public class Graph {
 			System.out.println("]\n");
 		}
 		
-		ArrayList<Integer> out=g1.Dijkstra_prototype(3);//测试单域情况中，路由算法的有效性
+		ArrayList<Integer> out=g1.dijkstra_prototype(3);//测试单域情况中，路由算法的有效性
 		for(Integer i:out){
 			System.out.print(i+"->");
 			
@@ -382,7 +384,13 @@ public class Graph {
 		
 		int t=g1.getDistance("00:00:00:00:00:00:00:03", "00:00:da:c5:01:a3:44:48");
 		System.out.println("Distance from source to destination is:"+t);
-
+		*/
+		
+		g1.collectFlowRequest("F:\\java code\\FL_PlugIn Project\\Floodlight_plugin\\src\\Flow Request.txt");
+		for(Flow_request t:g1.flowRequestList){
+			g1.dijkstra_flow_request_path_write(t);
+			t.showAllocatedPath();
+		}
 	}
 	
 	
