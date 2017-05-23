@@ -6,15 +6,6 @@ import java.io.*;
 */
 
 
-class AllocatedRoutePath{
-	Map<Link,Integer>  allocated_info=new HashMap<Link,Integer>();
-	
-}
-
-
-
-
-
 public class Graph {
 	ArrayList<Node> nodelist=new ArrayList<Node>();//存储图的所有节点信息
 	ArrayList<Link> linklist=new ArrayList<Link>();//存储图的所有link信息
@@ -257,7 +248,7 @@ public class Graph {
 		return distance;
 	}
 	
-	public void collectFlowRequest(String FlowRequestFilePath){//读取产生的流量请求，将其存入到flowRequestList列表中并初始化,暂定每5min一次
+	public void collectFlowRequest(String FlowRequestFilePath){//读取产生的流量请求，将其存入到图的flowRequestList列表中并初始化,暂定每5min一次
 		//File的格式为每条流的请求为一行，分别为（1）源地址（2）目的地址（3）带宽要求（4）延迟要求（5）优先级,变量之间用空格符分隔开
 		this.flowRequestList.clear();//执行列表的清理，防止上次收集过程中的数据残存在本次的列表中。
 		try{
@@ -284,29 +275,41 @@ public class Graph {
 		Link tmp=new Link();
 		for(int i=0;i<(path_node.size()-1);i++){
 			tmp=this.getLink(path_node.get(i), path_node.get(i+1));
-			fr.AllocatedPath.add(tmp);
+			if(tmp!=null){
+				fr.AllocatedPath.add(tmp);
+			}
 		}
 	}
 	
 	
-	
 	public void localTE(){
-		while(true){
-			try{
-				Thread.sleep(300000);//每5min执行一次LocalTE算法
-			}catch(InterruptedException e){
-				e.printStackTrace();
+		
+			for(Flow_request temp_flow_request:this.flowRequestList){
+				this.dijkstra_flow_request_path_write(temp_flow_request);
+				for(Link temp:temp_flow_request.AllocatedPath){
+					temp.allocated_bandwidth.put(temp_flow_request,temp_flow_request.bandwidth_request);
+				}
 			}
 			
-			this.collectFlowRequest("F:\\java code\\FL_PlugIn Project\\Floodlight_plugin\\src\\Flow Request");//RequestFilePath需要修改为实际的数据流请求文件
-			for(Flow_request t:this.flowRequestList){
-				this.dijkstra_flow_request_path_write(t);
+			for(Link tmp:this.linklist){
+				int sum_priority=0;
+				Iterator<Flow_request> iter_1=tmp.allocated_bandwidth.keySet().iterator();
+				while(iter_1.hasNext()){
+					Flow_request key=(Flow_request)iter_1.next();
+					sum_priority+=key.priority;
+				}
+				Iterator<Flow_request> iter_2=tmp.allocated_bandwidth.keySet().iterator();
+				while(iter_2.hasNext()){
+					Flow_request key=(Flow_request)iter_2.next();
+					float band_width_temp=tmp.bandwidth*((float)key.priority/sum_priority);
+					if(band_width_temp<key.bandwidth_request){
+						key.min_bandwidth=band_width_temp;
+					}else{
+						key.min_bandwidth=key.bandwidth_request;
+					}
+				}
 			}
 			
-		
-		}
-		
-		
 		
 	}
 	
@@ -341,6 +344,13 @@ public class Graph {
 				nodelist.remove(index);
 			}
 		}
+	}
+	
+	
+	public void run(){
+		this.collectFlowRequest("F:\\java code\\FL_PlugIn Project\\Floodlight_plugin\\src\\Flow Request.txt");
+		this.localTE();
+		
 	}
 	
 	
@@ -385,12 +395,22 @@ public class Graph {
 		int t=g1.getDistance("00:00:00:00:00:00:00:03", "00:00:da:c5:01:a3:44:48");
 		System.out.println("Distance from source to destination is:"+t);
 		*/
-		
+		/*
 		g1.collectFlowRequest("F:\\java code\\FL_PlugIn Project\\Floodlight_plugin\\src\\Flow Request.txt");
 		for(Flow_request t:g1.flowRequestList){
 			g1.dijkstra_flow_request_path_write(t);
 			t.showAllocatedPath();
 		}
+		*/
+		g1.collectFlowRequest("F:\\java code\\FL_PlugIn Project\\Floodlight_plugin\\src\\Flow Request.txt");
+	 	g1.localTE();
+		for(Flow_request t:g1.flowRequestList){
+			System.out.println(t);
+		}
+		
+		
+		
+		//g1.localTE();
 	}
 	
 	

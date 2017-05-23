@@ -6,7 +6,7 @@ class Link{
 	public int delay;
 	public float bandwidth;
 	boolean isAllocated;
-	public ArrayList<HashMap<Flow_request,Float>> allocated_bandwidth=new ArrayList<HashMap<Flow_request,Float>>();
+	public HashMap<Flow_request,Float> allocated_bandwidth=new HashMap<Flow_request,Float>();
 	
 	public Link(String start_id,String end_id,int link_delay,int bandwidth){//初始化Link信息
 		this.start_switch=start_id;

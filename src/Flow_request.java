@@ -1,4 +1,4 @@
-import java.util.ArrayList;
+import java.util.*;
 
 /*流量需求，用于读取流量需求文件并将其每一项转换为一个Flow_request对象*/
 
@@ -9,17 +9,24 @@ class Flow_request{
 	public int delay_request;
 	public int priority;
 	public boolean isSatisfied;
-	public ArrayList<Link> AllocatedPath=new ArrayList<Link>();//用来存储TE算法之后控制器分配的路径以及带宽
+	public ArrayList<Link> AllocatedPath=new ArrayList<Link>();//用来存储TE算法之后控制器分配的路径
+	public float min_bandwidth;//用来存储实时分配的bottle-neck link所能提供的带宽
+	
 	
 	public Flow_request(String src,String dst,int bandwidth,int delay,int priority){
 		this.src_id=src;
 		this.dst_id=dst;
 		this.bandwidth_request=bandwidth;
 		this.isSatisfied=false;
+		this.min_bandwidth=bandwidth;
 	}
 	
 	public Flow_request(){
-		
+		this.src_id="";
+		this.dst_id="";
+		this.bandwidth_request=0;
+		this.isSatisfied=false;
+		this.min_bandwidth=99999;
 	}
 	
 	public void setSrcId(String src){
@@ -75,4 +82,11 @@ class Flow_request{
 		System.out.println();
 	}
 	
+	public String toString(){
+		String return_string;
+		return_string=this.src_id+"=>"+this.dst_id+" || Bandwidth Request:"+this.bandwidth_request+" || Allocated bandwidth:"+this.min_bandwidth;
+		
+		return return_string;
+		
+	}
 }
