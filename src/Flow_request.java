@@ -11,7 +11,7 @@ class Flow_request{
 	public int delay_request;
 	public int priority;
 	public boolean isSatisfied;
-	public ArrayList<Link> AllocatedPath=new ArrayList<Link>();//用来存储TE算法之后控制器分配的路径
+	public ArrayList<Link> AllocatedPath= new ArrayList<>();//用来存储TE算法之后控制器分配的路径
 	public float min_bandwidth;//用来存储实时分配的bottle-neck link所能提供的带宽
 
 	public static int default_priority=1;
@@ -90,8 +90,11 @@ class Flow_request{
 	
 	public String toString(){
 		String return_string;
-		return_string=this.src_id+"=>"+this.dst_id+" || Bandwidth Request:"+this.bandwidth_request+" || Allocated bandwidth:"+this.min_bandwidth;
-		
+		if(!this.AllocatedPath.isEmpty()) {
+			return_string = this.src_id + "=>" + this.dst_id + " || Bandwidth Request:" + this.bandwidth_request + " || Allocated bandwidth:" + this.min_bandwidth;
+		}else{
+			return_string="Sorry: Can not find a valid path from the source node to the destination node.";
+		}
 		return return_string;
 		
 	}
