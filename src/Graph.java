@@ -7,9 +7,9 @@ import java.io.*;
 
 
 public class Graph {
-	ArrayList<Node> nodelist=new ArrayList<Node>();//存储图的所有节点信息
-	ArrayList<Link> linklist=new ArrayList<Link>();//存储图的所有link信息
-	ArrayList<Flow_request> flowRequestList=new ArrayList<Flow_request>();//存储需要进行TE的所有流需求
+	ArrayList<Node> nodelist=new ArrayList<>();//存储图的所有节点信息
+	ArrayList<Link> linklist=new ArrayList<>();//存储图的所有link信息
+	ArrayList<Flow_request> flowRequestList=new ArrayList<>();//存储需要进行TE的所有流需求
 
 	public Graph(String link_file_path,String clusters_file_path){//初始化图，想通过link和clusters两个文件来进行图的初始化，函数参数用文件的String路径来表示，便于后期修改。
 		try{
@@ -18,9 +18,9 @@ public class Graph {
 			if(file_in1.isFile()&&file_in1.exists()){
 				InputStreamReader read=new InputStreamReader(new FileInputStream(file_in1),encoding);
 				BufferedReader bufferReader=new BufferedReader(read);
-				String lineTxt=null;
+				String lineTxt;
 				while((lineTxt=bufferReader.readLine())!=null){				
-					addNode(new Node((String)lineTxt));
+					addNode(new Node(lineTxt));
 					}
 				read.close();
 			}
@@ -29,7 +29,7 @@ public class Graph {
 			if(file_in2.isFile()&&file_in2.exists()){
 				InputStreamReader read2=new InputStreamReader(new FileInputStream(file_in2),encoding);
 				BufferedReader bufferReader=new BufferedReader(read2);
-				String lineTxt=null;
+				String lineTxt;
 				while((lineTxt=bufferReader.readLine())!=null){
 					String[] info_temp=lineTxt.split(" ");
 
@@ -124,7 +124,7 @@ public class Graph {
 		
 		for(Node node:nodelist){
 			int start=nodelist.indexOf(node);
-			int end=-1;
+			int end;
 			for(AdjInfo info:node.adjcent_list){
 				end=nodelist.indexOf(getNode(info.adj_id));
 				matrix[start][end]=info.adj_delay;
@@ -135,11 +135,11 @@ public class Graph {
 	
 	public ArrayList<Integer> dijkstra_prototype(int start){//迪杰斯特拉算法原型，输入参数为起点在nodelist中的index，直接根据邻接矩阵计算起点到图中所有节点的最短路径。
 		int[][] mat=this.constructDelayAdjMatrix();
-		ArrayList<Integer> output=new ArrayList<Integer>();
+		ArrayList<Integer> output=new ArrayList<>();
 		
-		int min=100000;
+		int min;
 		int[] dis=new int[mat.length];
-		int i=0,j=0,u=0;
+		int i,j,u=0;
 		int[] v=new int[mat.length];
 		
 		for(i=0;i<mat.length;i++){
@@ -214,7 +214,7 @@ public class Graph {
 		int start=getNum(src);//获取src在nodelist中的下标
 		int end=getNum(dst);//获取dst在nodelist中的下标
 		ArrayList<Integer> result=dijkstra_prototype(start);
-		ArrayList<String> StringResult=new ArrayList<String>();
+		ArrayList<String> StringResult= new ArrayList<>();
 		result.add(getNum(dst));
 		if(result.contains(end)){
 			int end_index=result.indexOf(end);
@@ -227,17 +227,7 @@ public class Graph {
 		else
 			return null;
 	}
-	
-	
-	
-	
-	public void dijkstarSP(Node src,Node dst){//计算由src节点到dst节点的最短距离
-		
-	}
-	
-	public void dijkstarSP(String src,String dst){//重载最短路径函数，可以直接由节点的名称来计算最短路径
-		
-	}
+
 	
 	public int getDistance(String src,String dst){//获取从src到达dst的路径的最短延迟
 		int distance=0;
@@ -257,7 +247,7 @@ public class Graph {
 			if(file_in.isFile()&&file_in.exists()){
 				InputStreamReader read=new InputStreamReader(new FileInputStream(file_in),encoding);
 				BufferedReader bufferReader=new BufferedReader(read);
-				String lineTxt=null;
+				String lineTxt;
 				while((lineTxt=bufferReader.readLine())!=null){				
 					String[] info_temp=lineTxt.split(" ");
 					flowRequestList.add(new Flow_request(info_temp[0],info_temp[1],Integer.parseInt(info_temp[2]),Integer.parseInt(info_temp[3]),Integer.parseInt(info_temp[4])));
@@ -272,7 +262,7 @@ public class Graph {
 	
 	public void dijkstra_flow_request_path_write(Flow_request fr){//为每一条数据流请求进行纯延迟最短路径计算，分配最短路径
 		ArrayList<String> path_node=this.getStringPath(fr.src_id, fr.dst_id);
-		Link tmp=new Link();
+		Link tmp;
 		for(int i=0;i<(path_node.size()-1);i++){
 			tmp=this.getLink(path_node.get(i), path_node.get(i+1));
 			if(tmp!=null){
@@ -293,27 +283,25 @@ public class Graph {
 			
 			for(Link tmp:this.linklist){
 				int sum_priority=0;
-				Iterator<Flow_request> iter_1=tmp.allocated_bandwidth.keySet().iterator();
-				while(iter_1.hasNext()){
-					Flow_request key=(Flow_request)iter_1.next();
-					sum_priority+=key.priority;
+				for (Flow_request key : tmp.allocated_bandwidth.keySet()) {
+					sum_priority += key.priority;
 				}
-				Iterator<Flow_request> iter_2=tmp.allocated_bandwidth.keySet().iterator();
-				while(iter_2.hasNext()){
-					Flow_request key=(Flow_request)iter_2.next();
-					float band_width_temp=tmp.bandwidth*((float)key.priority/sum_priority);
-					if(band_width_temp<key.bandwidth_request){
-						key.min_bandwidth=band_width_temp;
-					}else{
-						key.min_bandwidth=key.bandwidth_request;
+				for (Flow_request key : tmp.allocated_bandwidth.keySet()) {
+					float band_width_temp = tmp.bandwidth * ((float) key.priority / sum_priority);
+					if (band_width_temp < key.min_bandwidth) {
+						key.min_bandwidth = band_width_temp;
+						tmp.isAllocated = true;
 					}
 				}
 			}
-			
-		
+
+			//Debug 用，打印分配完成后，每条数据流所获得的分配链路流量
+			for(Flow_request tm:this.flowRequestList){
+				System.out.print(tm.AllocatedPath+" || Allocated Bandwidth: ");
+				System.out.println(tm.min_bandwidth);
+			}
 	}
 	
-
 	
 	
 	public void addLink(String src_point,String dst_point,int delay,int bandwidth){//添加从src到dst的链路
@@ -357,7 +345,7 @@ public class Graph {
 	
 	
 	public static void main(String[] args){
-		Graph g1=new Graph("C:\\Users\\haven\\OneDrive\\科研\\SDN\\拓扑结构\\links","C:\\Users\\haven\\OneDrive\\科研\\SDN\\拓扑结构\\clusters");
+		Graph g1=new Graph("F:\\java code\\FL_PlugIn Project\\Floodlight_plugin\\src\\links","F:\\java code\\FL_PlugIn Project\\Floodlight_plugin\\src\\clusters");
 		
 		/*
 		for(Node node_print:g1.nodelist){
@@ -403,11 +391,13 @@ public class Graph {
 		}
 		*/
 		g1.collectFlowRequest("F:\\java code\\FL_PlugIn Project\\Floodlight_plugin\\src\\Flow Request.txt");
-	 	g1.localTE();
+	 	//g1.localTE();
+	 	g1.run();
+	 	/*
 		for(Flow_request t:g1.flowRequestList){
 			System.out.println(t);
 		}
-		
+		*/
 		
 		
 		//g1.localTE();

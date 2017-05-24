@@ -1,6 +1,8 @@
 import java.util.*;
 
 /*流量需求，用于读取流量需求文件并将其每一项转换为一个Flow_request对象*/
+//Flow Request文件的格式为每条流的请求为一行，分别为（1）源地址（2）目的地址（3）带宽要求（4）延迟要求（5）优先级,变量之间用空格符分隔开
+
 
 class Flow_request{
 	public String src_id;
@@ -11,6 +13,8 @@ class Flow_request{
 	public boolean isSatisfied;
 	public ArrayList<Link> AllocatedPath=new ArrayList<Link>();//用来存储TE算法之后控制器分配的路径
 	public float min_bandwidth;//用来存储实时分配的bottle-neck link所能提供的带宽
+
+	public static int default_priority=1;
 	
 	
 	public Flow_request(String src,String dst,int bandwidth,int delay,int priority){
@@ -19,6 +23,7 @@ class Flow_request{
 		this.bandwidth_request=bandwidth;
 		this.isSatisfied=false;
 		this.min_bandwidth=bandwidth;
+		this.priority=priority;
 	}
 	
 	public Flow_request(){
@@ -27,6 +32,7 @@ class Flow_request{
 		this.bandwidth_request=0;
 		this.isSatisfied=false;
 		this.min_bandwidth=99999;
+		this.priority=default_priority;
 	}
 	
 	public void setSrcId(String src){
