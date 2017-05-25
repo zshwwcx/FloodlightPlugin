@@ -17,6 +17,10 @@ public class Graph {
 	ArrayList<Link> linklist=new ArrayList<>();//存储图的所有link信息
 	ArrayList<Flow_request> flowRequestList=new ArrayList<>();//存储需要进行TE的所有流需求
 
+    public static String GraphNodeFile="E:\\代码\\java\\FloodlightPlugin\\src\\clusters_new_topo";
+    public static String GraphLinkFile="E:\\代码\\java\\FloodlightPlugin\\src\\links_new_topo";
+    public static String GraphFlowReuqestListFile="E:\\代码\\java\\FloodlightPlugin\\src\\NewFlowRequest.txt";
+
 	public Graph(String link_file_path,String clusters_file_path){//初始化图，想通过link和clusters两个文件来进行图的初始化，函数参数用文件的String路径来表示，便于后期修改。
 		try{
 			String encoding="utf-8";
@@ -382,16 +386,42 @@ public class Graph {
 	
 	
 	public void run(){
-		this.collectFlowRequest("F:\\java code\\FL_PlugIn Project\\Floodlight_plugin\\src\\Flow Request.txt");
+		this.collectFlowRequest(GraphFlowReuqestListFile);
 		this.localTE();
-		this.topologyUpdate();
+		//this.topologyUpdate();
+	}
+
+
+	public void FlowRequestFileGenerate(int FlowRequestNumber) throws FileNotFoundException {//FlowRequestNumber为数据流需求文件中需要产生的数据流数目
+		Random rand=new Random(47);
+		int FlowSize=this.nodelist.size();
+		try {
+            File file_out = new File(GraphFlowReuqestListFile);
+            FileWriter file_write=new FileWriter(file_out,false);
+            for (int i = 0; i < FlowRequestNumber; i++) {
+                int nodeStartNumber=rand.nextInt(FlowSize);
+                int nodeEndNumber=rand.nextInt(FlowSize);
+                int bandwidthRequest=rand.nextInt(500);
+                int delayRequest=rand.nextInt(500);
+                int priorityRequest=rand.nextInt(10);
+                if(nodeStartNumber==nodeEndNumber){
+                    nodeEndNumber=rand.nextInt(FlowSize);
+                }
+                String content=this.nodelist.get(nodeStartNumber).ID+" "+this.nodelist.get(nodeEndNumber).ID+" "+bandwidthRequest+" "+delayRequest+" "+priorityRequest+"\n";
+                file_write.write(content);
+            }
+            file_write.close();
+        }catch(Exception e){
+		    e.printStackTrace();
+        }
+
 	}
 	
 	
 	
 	
-	public static void main(String[] args){
-		Graph g1=new Graph("F:\\java code\\FL_PlugIn Project\\Floodlight_plugin\\src\\links","F:\\java code\\FL_PlugIn Project\\Floodlight_plugin\\src\\clusters");
+	public static void main(String[] args) throws FileNotFoundException {
+		Graph g1=new Graph(GraphLinkFile,GraphNodeFile);
 		
 		/*
 		for(Node node_print:g1.nodelist){
@@ -436,9 +466,12 @@ public class Graph {
 			t.showAllocatedPath();
 		}
 		*/
-		g1.collectFlowRequest("F:\\java code\\FL_PlugIn Project\\Floodlight_plugin\\src\\Flow Request.txt");
+		g1.FlowRequestFileGenerate(100);
+		//g1.collectFlowRequest("E:\\代码\\java\\FloodlightPlugin\\src\\Flow Request.txt");
 	 	//g1.localTE();
 	 	g1.run();
+	 	//System.out.println("END NOW");
+
 	 	/*
 		for(Flow_request t:g1.flowRequestList){
 			System.out.println(t);
