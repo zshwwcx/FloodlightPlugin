@@ -17,9 +17,9 @@ public class Graph {
 	ArrayList<Link> linklist=new ArrayList<>();//存储图的所有link信息
 	ArrayList<Flow_request> flowRequestList=new ArrayList<>();//存储需要进行TE的所有流需求
 
-    public static String GraphNodeFile="E:\\代码\\java\\FloodlightPlugin\\src\\clusters_new_topo";
-    public static String GraphLinkFile="E:\\代码\\java\\FloodlightPlugin\\src\\links_new_topo";
-    public static String GraphFlowReuqestListFile="E:\\代码\\java\\FloodlightPlugin\\src\\NewFlowRequest.txt";
+    public static String GraphNodeFile="C:\\code\\FloodlightPlugin\\src\\clusters_new_topo";
+    public static String GraphLinkFile="C:\\code\\FloodlightPlugin\\src\\links_new_topo";
+    public static String GraphFlowReuqestListFile="C:\\code\\FloodlightPlugin\\src\\NewFlowRequest.txt";
 
 	public Graph(String link_file_path,String clusters_file_path){//初始化图，想通过link和clusters两个文件来进行图的初始化，函数参数用文件的String路径来表示，便于后期修改。
 		try{
@@ -143,6 +143,7 @@ public class Graph {
 		return matrix;
 	}
 
+	/*此函数的输出为以start节点为起点，到途中所有可达节点的一个最短路径列表。*/
 	public ArrayList<Integer> dijkstra_prototype(int start){//迪杰斯特拉算法原型，输入参数为起点在nodelist中的index，直接根据邻接矩阵计算起点到图中所有节点的最短路径。
 		int[][] mat=this.constructDelayAdjMatrix();
 		ArrayList<Integer> output=new ArrayList<>();
@@ -188,7 +189,7 @@ public class Graph {
 		int start=getNum(src);//获取src在nodelist中的下标
 		int end=getNum(dst);//获取dst在nodelist中的下标
 		ArrayList<Integer> result=dijkstra_prototype(start);
-		result.add(getNum(dst));
+		//result.add(getNum(dst));//此处似乎有错误，我们在这里是需要检查dst节点的可达性，而不是添加进去
 		if(result.contains(end)){
 			int end_index=result.indexOf(end);
 			//result.add(0, start);
@@ -201,13 +202,15 @@ public class Graph {
 			}
 			System.out.print("end");
 		}
+		else
+			System.out.println("Can not find the path from "+src+" to the "+dst);;
 	}
 
 	public ArrayList<Integer> getIndexPath(String src,String dst){//得到从src到dst最短路径所需要经过的所有节点的index
 		int start=getNum(src);//获取src在nodelist中的下标
 		int end=getNum(dst);//获取dst在nodelist中的下标
 		ArrayList<Integer> result=dijkstra_prototype(start);
-		result.add(getNum(dst));
+		//result.add(getNum(dst));
 		if(result.contains(end)){
 			int end_index=result.indexOf(end);
 			//result.add(0, start);
@@ -217,6 +220,7 @@ public class Graph {
 			return result;
 		}
 		else
+			System.out.println("Can not find the path from "+src+" to the "+dst);
 			return null;
 	}
 
@@ -225,7 +229,7 @@ public class Graph {
 		int end=getNum(dst);//获取dst在nodelist中的下标
 		ArrayList<Integer> result=dijkstra_prototype(start);
 		ArrayList<String> StringResult= new ArrayList<>();
-		result.add(getNum(dst));
+		//result.add(getNum(dst));
 		if(result.contains(end)){
 			int end_index=result.indexOf(end);
 			//result.add(0, start);
@@ -235,6 +239,7 @@ public class Graph {
 			return StringResult;
 		}
 		else
+			System.out.println("Can not find the path from "+src+" to the "+dst);
 			return null;
 	}
 
@@ -273,12 +278,15 @@ public class Graph {
 	public void dijkstra_flow_request_path_write(Flow_request fr){//为每一条数据流请求进行纯延迟最短路径计算，分配最短路径
 		ArrayList<String> path_node=this.getStringPath(fr.src_id, fr.dst_id);
 		Link tmp;
-		for(int i=0;i<(path_node.size()-1);i++){
-			tmp=this.getLink(path_node.get(i), path_node.get(i+1));
-			if(tmp!=null){
-				fr.AllocatedPath.add(tmp);
+		if(path_node!=null) {
+			for (int i = 0; i < (path_node.size() - 1); i++) {
+				tmp = this.getLink(path_node.get(i), path_node.get(i + 1));
+				if (tmp != null) {
+					fr.AllocatedPath.add(tmp);
+				}
 			}
 		}
+
 	}
 
 
@@ -297,10 +305,17 @@ public class Graph {
 				sum_priority += key.priority;
 			}
 			for (Flow_request key : tmp.allocated_bandwidth.keySet()) {
-				float band_width_temp = tmp.bandwidth * ((float) key.priority / sum_priority);
-				if (band_width_temp < key.min_bandwidth) {
-					key.min_bandwidth = band_width_temp;
-					tmp.isAllocated = true;
+				if(key.AllocatedPath.size()!=0) {
+					float band_width_temp = tmp.bandwidth * ((float) key.priority / sum_priority);
+					if (band_width_temp <= key.min_bandwidth&&band_width_temp<=key.bandwidth_request) {
+						key.min_bandwidth = band_width_temp;
+						tmp.isAllocated = true;
+					}
+					else if(band_width_temp<=key.min_bandwidth&&band_width_temp>=key.bandwidth_request){
+						key.min_bandwidth=key.bandwidth_request;
+					}
+					
+
 				}//else{//带宽更新操作转移到topoUpdate函数中进行
 				//tmp.bandwidth-=band_width_temp;
 				//if(tmp.bandwidth<=0){
@@ -313,7 +328,10 @@ public class Graph {
 
 			//Debug 用，打印分配完成后，每条数据流所获得的分配链路流量
 		for (Flow_request tm : this.flowRequestList) {
-			System.out.print(tm.AllocatedPath + " || Allocated Bandwidth: ");
+			if(tm.min_bandwidth==99999.0){
+				tm.min_bandwidth=0;
+			}
+			System.out.print(tm.src_id+" -> "+" "+tm.dst_id+" "+tm.AllocatedPath + " || Allocated Bandwidth: ");
 			System.out.println(tm.min_bandwidth);
 		}
 
@@ -403,7 +421,7 @@ public class Graph {
                 int nodeEndNumber=rand.nextInt(FlowSize);
                 int bandwidthRequest=rand.nextInt(500);
                 int delayRequest=rand.nextInt(500);
-                int priorityRequest=rand.nextInt(10);
+                int priorityRequest=rand.nextInt(10)+1;
                 if(nodeStartNumber==nodeEndNumber){
                     nodeEndNumber=rand.nextInt(FlowSize);
                 }
@@ -466,7 +484,7 @@ public class Graph {
 			t.showAllocatedPath();
 		}
 		*/
-		g1.FlowRequestFileGenerate(100);
+		//g1.FlowRequestFileGenerate(100);
 		//g1.collectFlowRequest("E:\\代码\\java\\FloodlightPlugin\\src\\Flow Request.txt");
 	 	//g1.localTE();
 	 	g1.run();

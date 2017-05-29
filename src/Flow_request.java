@@ -22,7 +22,7 @@ class Flow_request{
 		this.dst_id=dst;
 		this.bandwidth_request=bandwidth;
 		this.isSatisfied=false;
-		this.min_bandwidth=bandwidth;
+		this.min_bandwidth=99999;
 		this.priority=priority;
 	}
 	
