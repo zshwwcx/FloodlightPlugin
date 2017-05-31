@@ -19,7 +19,7 @@ public class Graph {
 
     public static String GraphNodeFile="F:\\java code\\src\\topo\\domain4";
     public static String GraphLinkFile="F:\\java code\\src\\topo\\links_tuple";
-    public static String GraphFlowReuqestListFile="F:\\java code\\src\\flow request\\NewFlowRequest.txt";
+    public static String GraphFlowReuqestListFile="F:\\java code\\src\\flow_request\\NewFlowRequest.txt";
 
 	public Graph(String link_file_path,String clusters_file_path){//初始化图，想通过link和clusters两个文件来进行图的初始化，函数参数用文件的String路径来表示，便于后期修改。
 		try{
@@ -84,6 +84,7 @@ public class Graph {
 			if(tmp.getLinkStart().equals(start_switch)&&tmp.getLinkEnd().equals(end_switch)){
 				return tmp;
 			}
+
 		}
 		return null;
 	}
@@ -280,13 +281,19 @@ public class Graph {
 		Link tmp;
 		if(path_node!=null) {
 			for (int i = 0; i < (path_node.size() - 1); i++) {
-				tmp = this.getLink(path_node.get(i), path_node.get(i + 1));
+				tmp = this.getLink(path_node.get(i), path_node.get(i + 1));//此处需要修改，getLink应该可以获取任意两个可达节点之间的链路，而此处使用的为两点直接直连的link
 				if (tmp != null) {
 					fr.AllocatedPath.add(tmp);
 				}
+				else{
+					//此处需要添加从path_node.get(i)到path_node.get(i+1)的所有间接link
+					fr.AllocatedPath.add(添加所有从path_node(i)到path_node(i+1)的link);
+				}
 			}
-		}
 
+
+
+		}
 	}
 
 
@@ -411,7 +418,11 @@ public class Graph {
 	}
 
 
-	public void FlowRequestFileGenerate(int FlowRequestNumber) throws FileNotFoundException {//FlowRequestNumber为数据流需求文件中需要产生的数据流数目
+	/*
+	* 数据流请求文件产生方式1：根据图的初始化结果，对于所有Node的邻接链表进行rand遍历，选择源节点和目的节点，这种产生方式保证了数据流请求是100%有效的。
+	* */
+
+	public void FlowRequestFileGenerate_1(int FlowRequestNumber) throws FileNotFoundException {//FlowRequestNumber为数据流需求文件中需要产生的数据流数目
 		Random rand=new Random(43);
 		int FlowSize=this.nodelist.size();
 		try {
@@ -435,6 +446,35 @@ public class Graph {
         }catch(Exception e){
 		    e.printStackTrace();
         }
+
+	}
+
+	/*
+	*数据流请求产生方式2：在图中随机选取两个点，作为源节点和目的节点，测试图的连通性和性能
+	 *  */
+	public void FlowRequestFileGenerate_2(int FlowRequestNumber) throws FileNotFoundException {//FlowRequestNumber为数据流需求文件中需要产生的数据流数目
+		Random rand=new Random(43);
+		int FlowSize=this.nodelist.size();
+		try {
+			File file_out = new File(GraphFlowReuqestListFile);
+			FileWriter file_write=new FileWriter(file_out,false);
+			for (int i = 0; i < FlowRequestNumber; i++) {
+
+				int nodeStartNumber=rand.nextInt(FlowSize);
+				int nodeEndNumber=rand.nextInt(FlowSize);
+				int bandwidthRequest=rand.nextInt(500);
+				int delayRequest=rand.nextInt(500);
+				int priorityRequest=rand.nextInt(10)+1;
+				if(nodeStartNumber==nodeEndNumber){
+					nodeEndNumber=rand.nextInt(FlowSize);
+				}
+				String content=this.nodelist.get(nodeStartNumber).ID+" "+this.nodelist.get(nodeEndNumber).ID+" "+bandwidthRequest+" "+delayRequest+" "+priorityRequest+"\n";
+				file_write.write(content);
+			}
+			file_write.close();
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 
 	}
 	
@@ -487,7 +527,8 @@ public class Graph {
 			t.showAllocatedPath();
 		}
 		*/
-		g1.FlowRequestFileGenerate(100);
+		g1.FlowRequestFileGenerate_1(100);
+		//g1.FlowRequestFileGenerate_2(100);
 		//g1.collectFlowRequest("E:\\代码\\java\\FloodlightPlugin\\src\\Flow Request.txt");
 	 	//g1.localTE();
 	 	g1.run();
