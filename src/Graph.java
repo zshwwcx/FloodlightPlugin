@@ -171,11 +171,12 @@ public class Graph {
 				}
 			}
 			v[u]=1;
+			/*此处似乎有问题。因为最短路径可能会重复用到某一个点，所以不应该有检测ouput是否含有u节点*/
 			if(!output.contains(u)){
 				output.add(u);
 			}
 			for(j=0;j<mat.length;j++){
-				int tmp = (mat[u][j]==100000 ? 100000 : (min + mat[u][j]));
+				int tmp = (mat[u][j]==1000000 ? 1000000 : (min + mat[u][j]));
 				if(v[j]==0&&dis[j]>tmp){
 					dis[j]=dis[u]+mat[u][j];
 				}
@@ -190,18 +191,19 @@ public class Graph {
 		int start=getNum(src);//获取src在nodelist中的下标
 		int end=getNum(dst);//获取dst在nodelist中的下标
 		ArrayList<Integer> result=dijkstra_prototype(start);
+		ArrayList<Integer> output_result=new ArrayList<>();
 		//result.add(getNum(dst));//此处似乎有错误，我们在这里是需要检查dst节点的可达性，而不是添加进去
 		if(result.contains(end)){
 			int end_index=result.indexOf(end);
 			//result.add(0, start);
-			for(int i=end_index+1;i<result.size();i++){
-				result.remove(i);
+			for(int i=0;i<=end_index;i++){
+				output_result.add(result.get(i));
 			}
 			System.out.println("The path from "+"\""+src+"\""+" to \""+dst+"\""+" is:");
-			for(int i=0;i<result.size();i++){
-				System.out.print(getId(result.get(i))+"==>");
+			for(int i=0;i<output_result.size();i++){
+				System.out.print(getId(output_result.get(i))+"==>");
 			}
-			System.out.print("end");
+			System.out.println("End");
 		}
 		else
 			System.out.println("Can not find the path from "+src+" to the "+dst);;
@@ -230,6 +232,7 @@ public class Graph {
 		int end=getNum(dst);//获取dst在nodelist中的下标
 		ArrayList<Integer> result=dijkstra_prototype(start);
 		ArrayList<String> StringResult= new ArrayList<>();
+		StringResult.clear();
 		//result.add(getNum(dst));
 		if(result.contains(end)){
 			int end_index=result.indexOf(end);
@@ -287,12 +290,9 @@ public class Graph {
 				}
 				else{
 					//此处需要添加从path_node.get(i)到path_node.get(i+1)的所有间接link
-					fr.AllocatedPath.add(添加所有从path_node(i)到path_node(i+1)的link);
+					//fr.AllocatedPath.add(添加所有从path_node(i)到path_node(i+1)的link);
 				}
 			}
-
-
-
 		}
 	}
 
@@ -338,8 +338,9 @@ public class Graph {
 			if(tm.min_bandwidth==99999.0){
 				tm.min_bandwidth=0;
 			}
-			System.out.print(tm.src_id+" -> "+" "+tm.dst_id+" "+tm.AllocatedPath + " || Allocated Bandwidth: ");
-			System.out.println(tm.min_bandwidth);
+			//System.out.print(tm.src_id+" -> "+" "+tm.dst_id+" "+tm.AllocatedPath + " || Allocated Bandwidth: ");
+			//System.out.println(tm.min_bandwidth);
+			this.printPath(tm.src_id,tm.dst_id);
 		}
 
 
