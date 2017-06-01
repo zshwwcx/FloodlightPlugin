@@ -55,13 +55,12 @@ public class Graph {
 
 					for(Node tmp:this.nodelist){
 						if(tmp.ID.equals(initial_id)){
-							int index=nodelist.indexOf(tmp);
-							nodelist.get(index).add_adj_node(adj_new);
+							//int index=nodelist.indexOf(tmp);
+							//nodelist.get(index).add_adj_node(adj_new);
+							tmp.add_adj_node(adj_new);
 						}
 					}
-
 					this.linklist.add(new Link(initial_id,adj_id,adj_delay,adj_bandwidth));
-
 					}
 				read2.close();
 			}
@@ -124,7 +123,7 @@ public class Graph {
 
 	public int[][] constructDelayAdjMatrix(){//构造图的邻接矩阵，通过Map<String id,int id_num>来将数组下标和节点的ID相互映射
 		int[][] matrix=new int[nodelist.size()][nodelist.size()];
-		int max_distance=100000;
+		int max_distance=1000000;
 
 		for(int m=0;m<matrix.length;m++){//初始化邻接矩阵，-1表示不可达
 			for(int n=0;n<matrix[m].length;n++){
@@ -150,17 +149,17 @@ public class Graph {
 		ArrayList<Integer> output=new ArrayList<>();
 
 		int min;
-		int[] dis=new int[mat.length];
+		int[] dis=new int[mat.length];//标志从start节点到目的节点的距离
 		int i,j,u=0;
-		int[] v=new int[mat.length];
+		int[] v=new int[mat.length];//标志节点的可达性
 
 		for(i=0;i<mat.length;i++){
 			dis[i]=mat[start][i];
 			v[i]=0;
 		}
-		v[start]=1;
+		v[start]=1;//将初始节点start设置为可达
 
-		output.add(start);
+		output.add(start);//将初始结点start添加到输出列表中
 
 		for(i=1;i<mat.length;i++){
 			min=1000000;//此处的min根据实验情况设置为100w，在真实情况中，最大延迟可能更加大，需要根据实际进行调节
