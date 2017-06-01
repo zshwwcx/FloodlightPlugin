@@ -20,6 +20,7 @@ public class Graph {
     public static String GraphNodeFile="F:\\java code\\src\\topo\\domain4";
     public static String GraphLinkFile="F:\\java code\\src\\topo\\links_tuple";
     public static String GraphFlowReuqestListFile="F:\\java code\\src\\flow_request\\NewFlowRequest.txt";
+    int max_delay=10000000;//表示延迟的最大值，随着实验的真实数值而改变，需要保证的是path的总的延迟（一条path中所有link的延迟之和要小于max_delay）
 
 	public Graph(String link_file_path,String clusters_file_path){//初始化图，想通过link和clusters两个文件来进行图的初始化，函数参数用文件的String路径来表示，便于后期修改。
 		try{
@@ -123,7 +124,7 @@ public class Graph {
 
 	public int[][] constructDelayAdjMatrix(){//构造图的邻接矩阵，通过Map<String id,int id_num>来将数组下标和节点的ID相互映射
 		int[][] matrix=new int[nodelist.size()][nodelist.size()];
-		int max_distance=1000000;
+		int max_distance=max_delay;
 
 		for(int m=0;m<matrix.length;m++){//初始化邻接矩阵，-1表示不可达
 			for(int n=0;n<matrix[m].length;n++){
@@ -143,8 +144,9 @@ public class Graph {
 		return matrix;
 	}
 
-	/*此函数的输出为以start节点为起点，到途中所有可达节点的一个最短路径列表。*/
-	public ArrayList<Integer> dijkstra_prototype(int start){//迪杰斯特拉算法原型，输入参数为起点在nodelist中的index，直接根据邻接矩阵计算起点到图中所有节点的最短路径。
+	/*此函数的输出为以start节点为起点，到途中所有可达节点的一个最短路径列表。输出结果为prev矩阵，前驱顶点数组。即，prev[i]的值是"顶点start"到"顶点i"的最短路径所经历的全部顶点中，位于"顶点i"之前的那个顶点。*/
+
+	public int[] dijkstra_prototype(int start){//迪杰斯特拉算法原型，输入参数为起点在nodelist中的index，直接根据邻接矩阵计算起点到图中所有节点的最短路径。
 		int[][] mat=this.constructDelayAdjMatrix();
 		ArrayList<Integer> output=new ArrayList<>();
 
@@ -152,17 +154,20 @@ public class Graph {
 		int[] dis=new int[mat.length];//标志从start节点到目的节点的距离
 		int i,j,u=0;
 		int[] v=new int[mat.length];//标志节点的可达性
+		int[] prev=new int[mat.length];//前驱顶点数组。即，prev[i]的值是"顶点start"到"顶点i"的最短路径所经历的全部顶点中，位于"顶点i"之前的那个顶点。
 
 		for(i=0;i<mat.length;i++){
 			dis[i]=mat[start][i];
 			v[i]=0;
+			prev[i]=0;
 		}
 		v[start]=1;//将初始节点start设置为可达
+		dis[start]=0;
 
 		output.add(start);//将初始结点start添加到输出列表中
 
 		for(i=1;i<mat.length;i++){
-			min=1000000;//此处的min根据实验情况设置为100w，在真实情况中，最大延迟可能更加大，需要根据实际进行调节
+			min=max_delay;//此处的min根据实验情况设置为100w，在真实情况中，最大延迟可能更加大，需要根据实际进行调节
 			for(j=0;j<mat.length;j++){
 				if((v[j]==0)&&(dis[j]<min)){
 					min=dis[j];
@@ -171,17 +176,18 @@ public class Graph {
 			}
 			v[u]=1;
 			/*此处似乎有问题。因为最短路径可能会重复用到某一个点，所以不应该有检测ouput是否含有u节点*/
-			if(!output.contains(u)){
+			/*if(!output.contains(u)) {
 				output.add(u);
-			}
+			}*/
 			for(j=0;j<mat.length;j++){
-				int tmp = (mat[u][j]==1000000 ? 1000000 : (min + mat[u][j]));
+				int tmp = (mat[u][j]==max_delay ? max_delay : (min + mat[u][j]));
 				if(v[j]==0&&dis[j]>tmp){
 					dis[j]=dis[u]+mat[u][j];
+					prev[j]=u;
 				}
 			}
 		}
-		return output;
+		return prev;
 	}
 
 
@@ -189,10 +195,29 @@ public class Graph {
 	public void printPath(String src,String dst){//打印从src岛dst节点所经过的最短路径中的所有节点
 		int start=getNum(src);//获取src在nodelist中的下标
 		int end=getNum(dst);//获取dst在nodelist中的下标
-		ArrayList<Integer> result=dijkstra_prototype(start);
+		int[] result=dijkstra_prototype(start);
 		ArrayList<Integer> output_result=new ArrayList<>();
+//		output_result.add(end);
+		int i=end;
+		int prev_index=0;
+		while(result[i]!=start){
+			prev_index=result[i];
+			output_result.add(prev_index);
+			i=prev_index;
+		}
+		if(!output_result.isEmpty()) {
+//			output_result.add(start);
+			Collections.reverse(output_result);
+			System.out.print(src+"==>");
+			for (int j = 0; j < output_result.size(); j++) {
+				System.out.print(getId(output_result.get(j)) + "==>");
+			}
+			System.out.print(dst+"||");
+		}else{
+			System.out.println("Can not find the path from "+src+" to the "+dst);
+		}
 		//result.add(getNum(dst));//此处似乎有错误，我们在这里是需要检查dst节点的可达性，而不是添加进去
-		if(result.contains(end)){
+		/*if(result.contains(end)){
 			int end_index=result.indexOf(end);
 			//result.add(0, start);
 			for(int i=0;i<=end_index;i++){
@@ -205,10 +230,10 @@ public class Graph {
 			System.out.println("End");
 		}
 		else
-			System.out.println("Can not find the path from "+src+" to the "+dst);;
+			System.out.println("Can not find the path from "+src+" to the "+dst);;*/
 	}
 
-	public ArrayList<Integer> getIndexPath(String src,String dst){//得到从src到dst最短路径所需要经过的所有节点的index
+	/*public ArrayList<Integer> getIndexPath(String src,String dst){//得到从src到dst最短路径所需要经过的所有节点的index
 		int start=getNum(src);//获取src在nodelist中的下标
 		int end=getNum(dst);//获取dst在nodelist中的下标
 		ArrayList<Integer> result=dijkstra_prototype(start);
@@ -224,10 +249,35 @@ public class Graph {
 		else
 			System.out.println("Can not find the path from "+src+" to the "+dst);
 			return null;
-	}
+	}*/
 
 	public ArrayList<String> getStringPath(String src,String dst){//得到从src到dst最短路径所需要经过的所有节点的String
 		int start=getNum(src);//获取src在nodelist中的下标
+		int end=getNum(dst);//获取dst在nodelist中的下标
+		int[] result=dijkstra_prototype(start);
+		ArrayList<Integer> output_result=new ArrayList<>();
+		ArrayList<String> output_string=new ArrayList<>();
+		int i=end;
+		int prev_index=0;
+		while(result[i]!=start){
+			prev_index=result[i];
+			output_result.add(prev_index);
+			i=prev_index;
+		}
+		if(!output_result.isEmpty()) {
+			output_result.add(start);
+			Collections.reverse(output_result);
+			output_result.add(end);
+			for (int j = 0; j < output_result.size(); j++) {
+				String node_string=getId(output_result.get(j));
+				output_string.add(node_string);
+			}
+			return output_string;
+		}else{
+			return null;
+		}
+
+		/*int start=getNum(src);//获取src在nodelist中的下标
 		int end=getNum(dst);//获取dst在nodelist中的下标
 		ArrayList<Integer> result=dijkstra_prototype(start);
 		ArrayList<String> StringResult= new ArrayList<>();
@@ -243,7 +293,7 @@ public class Graph {
 		}
 		else
 			System.out.println("Can not find the path from "+src+" to the "+dst);
-			return null;
+			return null;*/
 	}
 
 
@@ -320,8 +370,6 @@ public class Graph {
 					else if(band_width_temp<=key.min_bandwidth&&band_width_temp>=key.bandwidth_request){
 						key.min_bandwidth=key.bandwidth_request;
 					}
-					
-
 				}//else{//带宽更新操作转移到topoUpdate函数中进行
 				//tmp.bandwidth-=band_width_temp;
 				//if(tmp.bandwidth<=0){
@@ -329,21 +377,22 @@ public class Graph {
 				//}
 			}
 		}
-
-
-
-			//Debug 用，打印分配完成后，每条数据流所获得的分配链路流量
+		//Debug 用，打印分配完成后，每条数据流所获得的分配链路流量
 		for (Flow_request tm : this.flowRequestList) {
 			if(tm.min_bandwidth==99999.0){
 				tm.min_bandwidth=0;
 			}
 			//System.out.print(tm.src_id+" -> "+" "+tm.dst_id+" "+tm.AllocatedPath + " || Allocated Bandwidth: ");
 			//System.out.println(tm.min_bandwidth);
-			this.printPath(tm.src_id,tm.dst_id);
+//			printPath(tm.src_id,tm.dst_id);
+			System.out.println(getStringPath(tm.src_id,tm.dst_id));
+			/*int[] tmp=dijkstra_prototype(getNum(tm.src_id));
+			System.out.println(getNum(tm.src_id)+"===");
+			for(int i=0;i<tmp.length;i++){
+				System.out.print(tmp[i]+" ");
+			}
+			System.out.println();*/
 		}
-
-
-
 	}
 
 	
@@ -413,10 +462,16 @@ public class Graph {
 	
 	public void run(){
 		this.collectFlowRequest(GraphFlowReuqestListFile);
-		this.localTE();
+		//this.localTE();
 		//this.topologyUpdate();
 	}
 
+	public void test(){
+		this.collectFlowRequest(GraphFlowReuqestListFile);
+		for(Flow_request tm:this.flowRequestList){
+			System.out.println(getStringPath(tm.src_id,tm.dst_id));
+		}
+	}
 
 	/*
 	* 数据流请求文件产生方式1：根据图的初始化结果，对于所有Node的邻接链表进行rand遍历，选择源节点和目的节点，这种产生方式保证了数据流请求是100%有效的。
@@ -531,7 +586,8 @@ public class Graph {
 		//g1.FlowRequestFileGenerate_2(100);
 		//g1.collectFlowRequest("E:\\代码\\java\\FloodlightPlugin\\src\\Flow Request.txt");
 	 	//g1.localTE();
-	 	g1.run();
+	 	//g1.run();
+		g1.test();
 	 	//System.out.println("END NOW");
 
 	 	/*
