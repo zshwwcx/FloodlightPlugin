@@ -88,7 +88,7 @@ class Flow_request{
 		System.out.println();
 	}
 	
-	public String toString(){
+	/*public String toString(){
 		String return_string;
 		if(!this.AllocatedPath.isEmpty()) {
 			return_string = this.src_id + "=>" + this.dst_id + " || Bandwidth Request:" + this.bandwidth_request + " || Allocated bandwidth:" + this.min_bandwidth;
@@ -97,5 +97,5 @@ class Flow_request{
 		}
 		return return_string;
 		
-	}
+	}*/
 }

@@ -145,7 +145,7 @@ public class Graph {
 	}
 
 	/*此函数的输出为以start节点为起点，到途中所有可达节点的一个最短路径列表。输出结果为prev矩阵，前驱顶点数组。即，prev[i]的值是"顶点start"到"顶点i"的最短路径所经历的全部顶点中，位于"顶点i"之前的那个顶点。*/
-
+//此函数debug完成，没有bug了。
 	public int[] dijkstra_prototype(int start){//迪杰斯特拉算法原型，输入参数为起点在nodelist中的index，直接根据邻接矩阵计算起点到图中所有节点的最短路径。
 		int[][] mat=this.constructDelayAdjMatrix();
 		ArrayList<Integer> output=new ArrayList<>();
@@ -159,7 +159,7 @@ public class Graph {
 		for(i=0;i<mat.length;i++){
 			dis[i]=mat[start][i];
 			v[i]=0;
-			prev[i]=0;
+			prev[i]=-1;
 		}
 		v[start]=1;//将初始节点start设置为可达
 		dis[start]=0;
@@ -200,7 +200,7 @@ public class Graph {
 //		output_result.add(end);
 		int i=end;
 		int prev_index=0;
-		while(result[i]!=start){
+		while(result[i]!=-1){
 			prev_index=result[i];
 			output_result.add(prev_index);
 			i=prev_index;
@@ -251,6 +251,7 @@ public class Graph {
 			return null;
 	}*/
 
+//	getStringPath函数已经完成，没有bug
 	public ArrayList<String> getStringPath(String src,String dst){//得到从src到dst最短路径所需要经过的所有节点的String
 		int start=getNum(src);//获取src在nodelist中的下标
 		int end=getNum(dst);//获取dst在nodelist中的下标
@@ -259,7 +260,8 @@ public class Graph {
 		ArrayList<String> output_string=new ArrayList<>();
 		int i=end;
 		int prev_index=0;
-		while(result[i]!=start){
+
+		while(result[i]!=-1){
 			prev_index=result[i];
 			output_result.add(prev_index);
 			i=prev_index;
@@ -269,8 +271,7 @@ public class Graph {
 			Collections.reverse(output_result);
 			output_result.add(end);
 			for (int j = 0; j < output_result.size(); j++) {
-				String node_string=getId(output_result.get(j));
-				output_string.add(node_string);
+				output_string.add(getId(output_result.get(j)));
 			}
 			return output_string;
 		}else{
@@ -378,6 +379,10 @@ public class Graph {
 			}
 		}
 		//Debug 用，打印分配完成后，每条数据流所获得的分配链路流量
+
+	}
+
+	public void printResult(){
 		for (Flow_request tm : this.flowRequestList) {
 			if(tm.min_bandwidth==99999.0){
 				tm.min_bandwidth=0;
@@ -385,7 +390,11 @@ public class Graph {
 			//System.out.print(tm.src_id+" -> "+" "+tm.dst_id+" "+tm.AllocatedPath + " || Allocated Bandwidth: ");
 			//System.out.println(tm.min_bandwidth);
 //			printPath(tm.src_id,tm.dst_id);
-			System.out.println(getStringPath(tm.src_id,tm.dst_id));
+			if(getStringPath(tm.src_id,tm.dst_id)!=null) {
+				System.out.println(getStringPath(tm.src_id, tm.dst_id) + " || " + tm.min_bandwidth);
+			}else{
+				System.out.println("TE failed:Can not find a path from "+tm.src_id+" to "+tm.dst_id);
+			}
 			/*int[] tmp=dijkstra_prototype(getNum(tm.src_id));
 			System.out.println(getNum(tm.src_id)+"===");
 			for(int i=0;i<tmp.length;i++){
@@ -394,7 +403,6 @@ public class Graph {
 			System.out.println();*/
 		}
 	}
-
 	
 	
 	public void addLink(String src_point,String dst_point,int delay,int bandwidth){//添加从src到dst的链路
@@ -462,21 +470,23 @@ public class Graph {
 	
 	public void run(){
 		this.collectFlowRequest(GraphFlowReuqestListFile);
-		//this.localTE();
+		this.localTE();
+		this.printResult();
 		//this.topologyUpdate();
 	}
 
 	public void test(){
 		this.collectFlowRequest(GraphFlowReuqestListFile);
-		for(Flow_request tm:this.flowRequestList){
-			System.out.println(getStringPath(tm.src_id,tm.dst_id));
-		}
+//		for(Flow_request tm:this.flowRequestList){
+//			System.out.println(getStringPath(tm.src_id, tm.dst_id)+"  ||  "+tm.min_bandwidth);
+//		}
+		this.printResult();
 	}
 
 	/*
 	* 数据流请求文件产生方式1：根据图的初始化结果，对于所有Node的邻接链表进行rand遍历，选择源节点和目的节点，这种产生方式保证了数据流请求是100%有效的。
 	* */
-
+//  此函数似乎有一些问题，在测试过程中，产生的结果全部是null，但是产生方式2运行效果很好。
 	public void FlowRequestFileGenerate_1(int FlowRequestNumber) throws FileNotFoundException {//FlowRequestNumber为数据流需求文件中需要产生的数据流数目
 		Random rand=new Random(43);
 		int FlowSize=this.nodelist.size();
@@ -514,7 +524,6 @@ public class Graph {
 			File file_out = new File(GraphFlowReuqestListFile);
 			FileWriter file_write=new FileWriter(file_out,false);
 			for (int i = 0; i < FlowRequestNumber; i++) {
-
 				int nodeStartNumber=rand.nextInt(FlowSize);
 				int nodeEndNumber=rand.nextInt(FlowSize);
 				int bandwidthRequest=rand.nextInt(500);
@@ -582,12 +591,12 @@ public class Graph {
 			t.showAllocatedPath();
 		}
 		*/
-		g1.FlowRequestFileGenerate_1(100);
-		//g1.FlowRequestFileGenerate_2(100);
+//		g1.FlowRequestFileGenerate_1(100);
+		g1.FlowRequestFileGenerate_2(100);
 		//g1.collectFlowRequest("E:\\代码\\java\\FloodlightPlugin\\src\\Flow Request.txt");
 	 	//g1.localTE();
-	 	//g1.run();
-		g1.test();
+	 	g1.run();
+//		g1.test();
 	 	//System.out.println("END NOW");
 
 	 	/*

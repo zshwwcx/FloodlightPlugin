@@ -49,6 +49,7 @@ class Link{
 	public void setLinkDelay(int delay_add){//ÉèÖÃLinkµÄdelay
 		this.delay=delay_add;
 	}
+
 	public String toString(){
 		return this.start_switch+"=>"+this.end_switch;
 	}
