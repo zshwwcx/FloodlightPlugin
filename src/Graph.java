@@ -591,8 +591,7 @@ public class Graph {
 			t.showAllocatedPath();
 		}
 		*/
-//		g1.FlowRequestFileGenerate_1(100);
-		g1.FlowRequestFileGenerate_2(100);
+//		g1.FlowRequestFileGenerate_2(100);//产生数据流文件的函数，如果希望沿用之前的数据流文件，则不需要运行此函数
 		//g1.collectFlowRequest("E:\\代码\\java\\FloodlightPlugin\\src\\Flow Request.txt");
 	 	//g1.localTE();
 	 	g1.run();
