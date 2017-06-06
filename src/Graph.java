@@ -400,8 +400,9 @@ public class Graph {
 				for(int index_out=0;index_out<out_for_print.size()-1;index_out++){
 					Link tmp_out=getLink(out_for_print.get(index_out),out_for_print.get(index_out+1));
 					if(tmp_out!=null){
-
-						System.out.print(tmp_out.start_switch+" "+tmp_out.outport+" "+tmp_out.end_switch+" "+tmp_out.inport+"#");
+						System.out.println(tmp_out.start_switch+" "+tmp_out.outport);
+						System.out.println(tmp_out.end_switch+" "+tmp_out.inport);
+//						System.out.println();
 					}
 				}
 				System.out.println();
