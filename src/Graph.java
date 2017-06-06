@@ -17,8 +17,8 @@ public class Graph {
 	ArrayList<Link> linklist=new ArrayList<>();//存储图的所有link信息
 	ArrayList<Flow_request> flowRequestList=new ArrayList<>();//存储需要进行TE的所有流需求
 
-    public static String GraphNodeFile="F:\\java code\\src\\topo\\domain4";
-    public static String GraphLinkFile="F:\\java code\\src\\topo\\links_tuple";
+    public static String GraphNodeFile="F:\\java code\\src\\topo\\clusters_domain5 (copy)";
+    public static String GraphLinkFile="F:\\java code\\src\\topo\\links_domain5 (copy)";
     public static String GraphFlowReuqestListFile="F:\\java code\\src\\flow_request\\NewFlowRequest.txt";
     int max_delay=10000000;//表示延迟的最大值，随着实验的真实数值而改变，需要保证的是path的总的延迟（一条path中所有link的延迟之和要小于max_delay）
 
@@ -46,11 +46,15 @@ public class Graph {
 
 					String initial_id=info_temp[0];
 
-					String adj_id=info_temp[1];
+					String out_port=info_temp[1];
 
-					int adj_delay=Integer.parseInt(info_temp[2].substring(2),16);
+					String adj_id=info_temp[2];
 
-					int adj_bandwidth=Integer.parseInt(info_temp[3], 10);
+					String in_port=info_temp[3];
+
+					int adj_delay=Integer.parseInt(info_temp[4].substring(2),16);
+
+					int adj_bandwidth=Integer.parseInt(info_temp[5], 10);
 
 					AdjInfo adj_new=new AdjInfo(adj_id,adj_bandwidth,adj_delay);
 
@@ -61,7 +65,7 @@ public class Graph {
 							tmp.add_adj_node(adj_new);
 						}
 					}
-					this.linklist.add(new Link(initial_id,adj_id,adj_delay,adj_bandwidth));
+					this.linklist.add(new Link(initial_id,out_port,adj_id,in_port,adj_delay,adj_bandwidth));
 					}
 				read2.close();
 			}
@@ -390,8 +394,17 @@ public class Graph {
 			//System.out.print(tm.src_id+" -> "+" "+tm.dst_id+" "+tm.AllocatedPath + " || Allocated Bandwidth: ");
 			//System.out.println(tm.min_bandwidth);
 //			printPath(tm.src_id,tm.dst_id);
-			if(getStringPath(tm.src_id,tm.dst_id)!=null) {
-				System.out.println(getStringPath(tm.src_id, tm.dst_id) + " || " + tm.min_bandwidth);
+			ArrayList<String> out_for_print=getStringPath(tm.src_id,tm.dst_id);
+			System.out.println("The TE result for flow request from "+tm.src_id+" to "+tm.dst_id+" is: ");
+			if(out_for_print!=null) {
+				for(int index_out=0;index_out<out_for_print.size()-1;index_out++){
+					Link tmp_out=getLink(out_for_print.get(index_out),out_for_print.get(index_out+1));
+					if(tmp_out!=null){
+
+						System.out.print(tmp_out.start_switch+" "+tmp_out.outport+" "+tmp_out.end_switch+" "+tmp_out.inport+"#");
+					}
+				}
+				System.out.println();
 			}else{
 				System.out.println("TE failed:Can not find a path from "+tm.src_id+" to "+tm.dst_id);
 			}
@@ -591,7 +604,7 @@ public class Graph {
 			t.showAllocatedPath();
 		}
 		*/
-//		g1.FlowRequestFileGenerate_2(100);//产生数据流文件的函数，如果希望沿用之前的数据流文件，则不需要运行此函数
+		g1.FlowRequestFileGenerate_2(100);//产生数据流文件的函数，如果希望沿用之前的数据流文件，则不需要运行此函数
 		//g1.collectFlowRequest("E:\\代码\\java\\FloodlightPlugin\\src\\Flow Request.txt");
 	 	//g1.localTE();
 	 	g1.run();

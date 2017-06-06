@@ -3,14 +3,18 @@ import java.util.*;
 class Link{
 	public String start_switch;
 	public String end_switch;
+	public String outport;
+	public String inport;
 	public int delay;
 	public float bandwidth;
 	boolean isAllocated;
 	public HashMap<Flow_request,Float> allocated_bandwidth=new HashMap<Flow_request,Float>();
 	
-	public Link(String start_id,String end_id,int link_delay,int bandwidth){//初始化Link信息
+	public Link(String start_id,String out_port,String end_id,String in_port,int link_delay,int bandwidth){//初始化Link信息
 		this.start_switch=start_id;
+		this.outport=out_port;
 		this.end_switch=end_id;
+		this.inport=in_port;
 		this.delay=link_delay;
 		this.bandwidth=bandwidth;
 		this.isAllocated=false;
@@ -19,7 +23,9 @@ class Link{
 	
 	public Link(){
 		this.start_switch="";
+		this.outport="0";
 		this.end_switch="";
+		this.inport="0";
 		this.delay=0;
 		this.bandwidth=0;
 		this.isAllocated=false;
