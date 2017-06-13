@@ -473,12 +473,12 @@ public class Graph {
 			}
 		}
 
-		for(Link link:this.linklist){
+		for (Iterator<Link> it1 = this.linklist.iterator(); it1.hasNext(); ) {
+			Link link = (Link) it1.next();
 			if(link.isAllocated==true){
-				this.removeLink(link);
+				it1.remove();
 			}
 		}
-
 	}
 	
 	
@@ -486,7 +486,7 @@ public class Graph {
 		this.collectFlowRequest(GraphFlowReuqestListFile);
 		this.localTE();
 		this.printResult();
-		//this.topologyUpdate();
+		this.topologyUpdate();
 	}
 
 	public void test(){

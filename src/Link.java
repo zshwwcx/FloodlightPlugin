@@ -7,7 +7,7 @@ class Link{
 	public String inport;
 	public int delay;
 	public float bandwidth;
-	boolean isAllocated;
+	public boolean isAllocated;
 	public HashMap<Flow_request,Float> allocated_bandwidth=new HashMap<Flow_request,Float>();
 	
 	public Link(String start_id,String out_port,String end_id,String in_port,int link_delay,int bandwidth){//初始化Link信息
