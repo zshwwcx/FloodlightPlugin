@@ -57,7 +57,7 @@ class Link{
 	}
 
 	public String toString(){
-		return this.start_switch+"=>"+this.end_switch;
+		return this.start_switch+" "+this.outport+" "+this.end_switch+" "+this.inport+" "+this.delay+" "+this.bandwidth+"\n";
 	}
 	
 }
