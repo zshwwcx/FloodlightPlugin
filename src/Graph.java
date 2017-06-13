@@ -1,5 +1,6 @@
 import java.util.*;
 import java.io.*;
+import  java.text.DecimalFormat;
 
 /*
 读取link以及clusters文件的信息，将原来的拓扑结构转化为外挂程序的拓扑邻接链表结构，以便我们执行外部的TE算法。
@@ -18,7 +19,7 @@ public class Graph {
 	ArrayList<Flow_request> flowRequestList=new ArrayList<>();//存储需要进行TE的所有流需求
 
     public static String GraphNodeFile="F:\\java code\\src\\topo\\clusters_domain5 (copy)";
-    public static String GraphLinkFile="F:\\java code\\src\\topo\\links_domain5 (copy)";
+    public static String GraphLinkFile="F:\\java code\\src\\topo\\links_domain5 (another copy)";
     public static String GraphFlowReuqestListFile="F:\\java code\\src\\flow_request\\NewFlowRequest.txt";
     int max_delay=10000000;//表示延迟的最大值，随着实验的真实数值而改变，需要保证的是path的总的延迟（一条path中所有link的延迟之和要小于max_delay）
 
@@ -142,7 +143,9 @@ public class Graph {
 			int end;
 			for(AdjInfo info:node.adjcent_list){
 				end=nodelist.indexOf(getNode(info.adj_id));
-				matrix[start][end]=info.adj_delay;
+				if(end!=-1) {//保证end是在link中的一条链路,当end=-1时，表示在nodelist中没有找到这个node
+					matrix[start][end] = info.adj_delay;
+				}
 			}
 		}
 		return matrix;
@@ -354,10 +357,15 @@ public class Graph {
 	public void localTE() {
 
 		for (Flow_request temp_flow_request : this.flowRequestList) {
+			int min=9999999;
 			this.dijkstra_flow_request_path_write(temp_flow_request);
 			for (Link temp : temp_flow_request.AllocatedPath) {
 				temp.allocated_bandwidth.put(temp_flow_request, temp_flow_request.bandwidth_request);
+				if(temp.delay<min){
+					min=temp.delay;
+				}
 			}
+			temp_flow_request.min_delay=min;
 		}
 
 		for (Link tmp : this.linklist) {
@@ -405,9 +413,16 @@ public class Graph {
 //						System.out.println();
 					}
 				}
+//				这三行用于打印在一轮分配结束之后，所有flow request分配到的带宽情况
+				System.out.println("Request Bandwidth: "+tm.bandwidth_request);
+				System.out.println("Allocated bandwidth: "+tm.min_bandwidth );
+				System.out.println("Flowrequest priority: "+tm.priority);
+				System.out.println("Delay : "+tm.min_delay);
+				System.out.println("Not allocated bandwidth: "+(tm.bandwidth_request-tm.min_bandwidth));
 				System.out.println();
 			}else{
-				System.out.println("TE failed:Can not find a path from "+tm.src_id+" to "+tm.dst_id);
+				System.out.println("TE failed:Can not find a valid path.");
+				System.out.println();
 			}
 			/*int[] tmp=dijkstra_prototype(getNum(tm.src_id));
 			System.out.println(getNum(tm.src_id)+"===");
@@ -480,6 +495,37 @@ public class Graph {
 			}
 		}
 	}
+
+	public void flowrequestReGenerate(){
+		try {
+			File file_out = new File(GraphFlowReuqestListFile);
+			FileWriter file_write=new FileWriter(file_out,false);
+			for(Flow_request fl:this.flowRequestList){
+				if(fl.min_bandwidth<fl.bandwidth_request){
+					float bandwidth_regenerated=fl.bandwidth_request-fl.min_bandwidth;
+					DecimalFormat fnum=new DecimalFormat("##0.00");
+					String bd=fnum.format(bandwidth_regenerated);
+					String content=fl.src_id+" "+fl.dst_id+" "+bd+" "+fl.delay_request+" "+fl.priority+"\n";
+					file_write.write(content);
+				}
+			}
+			file_write.close();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+	}
+
+	/*分配结果数据反馈函数
+	* 用于反应此轮TE过后，所有数据流请求被分配的带宽情况以及还未分配，需要进入下一轮的请求
+	* */
+	public void allocateDataFeedback(){
+		for(Flow_request fl:this.flowRequestList){
+			System.out.println("FlowRequest from "+fl.src_id+" to "+fl.dst_id+" : ");
+			System.out.println("Request Bandwidth: "+fl.bandwidth_request);
+			System.out.println("Allocated bandwidth: "+fl.min_bandwidth );
+			System.out.println("Not allocated bandwidth: "+(fl.bandwidth_request-fl.min_bandwidth));
+		}
+	}
 	
 	
 	public void run(){
@@ -487,6 +533,7 @@ public class Graph {
 		this.localTE();
 		this.printResult();
 		this.topologyUpdate();
+		this.flowrequestReGenerate();
 	}
 
 	public void test(){
@@ -501,7 +548,7 @@ public class Graph {
 	* 数据流请求文件产生方式1：根据图的初始化结果，对于所有Node的邻接链表进行rand遍历，选择源节点和目的节点，这种产生方式保证了数据流请求是100%有效的。
 	* */
 //  此函数似乎有一些问题，在测试过程中，产生的结果全部是null，但是产生方式2运行效果很好。
-	public void FlowRequestFileGenerate_1(int FlowRequestNumber) throws FileNotFoundException {//FlowRequestNumber为数据流需求文件中需要产生的数据流数目
+	/*public void FlowRequestFileGenerate_1(int FlowRequestNumber) throws FileNotFoundException {//FlowRequestNumber为数据流需求文件中需要产生的数据流数目
 		Random rand=new Random(43);
 		int FlowSize=this.nodelist.size();
 		try {
@@ -526,7 +573,7 @@ public class Graph {
 		    e.printStackTrace();
         }
 
-	}
+	}*/
 
 	/*
 	*数据流请求产生方式2：在图中随机选取两个点，作为源节点和目的节点，测试图的连通性和性能
@@ -540,9 +587,9 @@ public class Graph {
 			for (int i = 0; i < FlowRequestNumber; i++) {
 				int nodeStartNumber=rand.nextInt(FlowSize);
 				int nodeEndNumber=rand.nextInt(FlowSize);
-				int bandwidthRequest=rand.nextInt(500);
+				int bandwidthRequest=rand.nextInt(20)+1;
 				int delayRequest=rand.nextInt(500);
-				int priorityRequest=rand.nextInt(10)+1;
+				int priorityRequest=rand.nextInt(3)+1;
 				if(nodeStartNumber==nodeEndNumber){
 					nodeEndNumber=rand.nextInt(FlowSize);
 				}
@@ -553,7 +600,6 @@ public class Graph {
 		}catch(Exception e){
 			e.printStackTrace();
 		}
-
 	}
 	
 	
