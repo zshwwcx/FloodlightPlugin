@@ -13,7 +13,7 @@ class Flow_request{
 	public boolean isSatisfied;
 	public ArrayList<Link> AllocatedPath= new ArrayList<>();//用来存储TE算法之后控制器分配的路径
 	public float min_bandwidth;//用来存储实时分配的bottle-neck link所能提供的带宽
-
+	public int min_delay;
 	public static int default_priority=1;
 	
 	
@@ -21,8 +21,10 @@ class Flow_request{
 		this.src_id=src;
 		this.dst_id=dst;
 		this.bandwidth_request=bandwidth;
+		this.delay_request=delay;
 		this.isSatisfied=false;
 		this.min_bandwidth=99999;
+		this.min_delay=99999;
 		this.priority=priority;
 	}
 	
@@ -31,7 +33,9 @@ class Flow_request{
 		this.dst_id="";
 		this.bandwidth_request=0;
 		this.isSatisfied=false;
+		this.delay_request=99999;
 		this.min_bandwidth=99999;
+		this.min_delay=99999;
 		this.priority=default_priority;
 	}
 	
