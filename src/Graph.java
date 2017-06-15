@@ -18,9 +18,9 @@ public class Graph {
 	ArrayList<Link> linklist=new ArrayList<>();//存储图的所有link信息
 	ArrayList<Flow_request> flowRequestList=new ArrayList<>();//存储需要进行TE的所有流需求
 
-    public static String GraphNodeFile="F:\\java code\\src\\topo\\clusters_domain5 (copy)";
-    public static String GraphLinkFile="F:\\java code\\src\\topo\\links_domain5 (another copy)";
-    public static String GraphFlowReuqestListFile="F:\\java code\\src\\flow_request\\NewFlowRequest.txt";
+    public static String GraphNodeFile="E:\\代码\\java\\FloodlightPlugin\\src\\topo\\clusters_domain5 (copy)";
+    public static String GraphLinkFile="E:\\代码\\java\\FloodlightPlugin\\src\\topo\\links_domain5 (copy)";
+    public static String GraphFlowReuqestListFile="E:\\代码\\java\\FloodlightPlugin\\src\\flow_request\\NewFlowRequest.txt";
     int max_delay=10000000;//表示延迟的最大值，随着实验的真实数值而改变，需要保证的是path的总的延迟（一条path中所有link的延迟之和要小于max_delay）
 
 	public Graph(String link_file_path,String clusters_file_path){//初始化图，想通过link和clusters两个文件来进行图的初始化，函数参数用文件的String路径来表示，便于后期修改。
@@ -394,7 +394,7 @@ public class Graph {
 
 	}
 
-	public void printResult(){
+	public void printResult(){//此函数用于打印TE输出结果，可以将函数改编为输出到文件,按照TE轮次，每一轮生成一个新的TE结果文件,TEoutput_n.txt
 		for (Flow_request tm : this.flowRequestList) {
 			if(tm.min_bandwidth==99999.0){
 				tm.min_bandwidth=0;
@@ -503,7 +503,7 @@ public class Graph {
 			for(Flow_request fl:this.flowRequestList){
 				if(fl.min_bandwidth<fl.bandwidth_request){
 					float bandwidth_regenerated=fl.bandwidth_request-fl.min_bandwidth;
-					DecimalFormat fnum=new DecimalFormat("##0.00");
+					DecimalFormat fnum=new DecimalFormat("##0");//此处将最终的bandwidth取整，是因为在debug中，二次读取文件的flowrequest过程，代码329行对于0.00的字符串数字转化为int有bug.
 					String bd=fnum.format(bandwidth_regenerated);
 					String content=fl.src_id+" "+fl.dst_id+" "+bd+" "+fl.delay_request+" "+fl.priority+"\n";
 					file_write.write(content);
@@ -654,7 +654,9 @@ public class Graph {
 		g1.FlowRequestFileGenerate_2(100);//产生数据流文件的函数，如果希望沿用之前的数据流文件，则不需要运行此函数
 		//g1.collectFlowRequest("E:\\代码\\java\\FloodlightPlugin\\src\\Flow Request.txt");
 	 	//g1.localTE();
-	 	g1.run();
+		for(int i=0;i<10;i++) {
+			g1.run();
+		}
 //		g1.test();
 	 	//System.out.println("END NOW");
 
