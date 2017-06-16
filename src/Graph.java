@@ -18,9 +18,9 @@ public class Graph {
 	ArrayList<Link> linklist=new ArrayList<>();//存储图的所有link信息
 	ArrayList<Flow_request> flowRequestList=new ArrayList<>();//存储需要进行TE的所有流需求
 
-    public static String GraphNodeFile="E:\\代码\\java\\FloodlightPlugin\\src\\topo\\clusters_domain5 (copy)";
-    public static String GraphLinkFile="E:\\代码\\java\\FloodlightPlugin\\src\\topo\\links_domain5 (copy)";
-    public static String GraphFlowReuqestListFile="E:\\代码\\java\\FloodlightPlugin\\src\\flow_request\\NewFlowRequest.txt";
+    public static String GraphNodeFile="F:\\java code\\src\\topo\\clusters_domain5 (copy)";
+    public static String GraphLinkFile="F:\\java code\\src\\topo\\links_domain5 (copy)";
+    public static String GraphFlowReuqestListFile="F:\\java code\\src\\flow_request\\NewFlowRequest.txt";
     int max_delay=10000000;//表示延迟的最大值，随着实验的真实数值而改变，需要保证的是path的总的延迟（一条path中所有link的延迟之和要小于max_delay）
 
 	public Graph(String link_file_path,String clusters_file_path){//初始化图，想通过link和clusters两个文件来进行图的初始化，函数参数用文件的String路径来表示，便于后期修改。
