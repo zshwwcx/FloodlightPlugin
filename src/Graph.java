@@ -1,6 +1,7 @@
 import java.util.*;
 import java.io.*;
 import  java.text.DecimalFormat;
+import java.util.Calendar;
 
 /*
 读取link以及clusters文件的信息，将原来的拓扑结构转化为外挂程序的拓扑邻接链表结构，以便我们执行外部的TE算法。
@@ -651,22 +652,22 @@ public class Graph {
 			t.showAllocatedPath();
 		}
 		*/
-		g1.FlowRequestFileGenerate_2(100);//产生数据流文件的函数，如果希望沿用之前的数据流文件，则不需要运行此函数
+		long start=Calendar.getInstance().getTimeInMillis();//用于测试系统TE时间
+		g1.FlowRequestFileGenerate_2(10000);//产生数据流文件的函数，如果希望沿用之前的数据流文件，则不需要运行此函数
 		//g1.collectFlowRequest("E:\\代码\\java\\FloodlightPlugin\\src\\Flow Request.txt");
 	 	//g1.localTE();
-		for(int i=0;i<10;i++) {
+//		for(int i=0;i<10;i++) {
 			g1.run();
-		}
+//		}
+		long end=Calendar.getInstance().getTimeInMillis();
+		System.out.println("Run time :"+(double)(end-start)/1000);//用于测试系统TE时间
 //		g1.test();
 	 	//System.out.println("END NOW");
-
 	 	/*
 		for(Flow_request t:g1.flowRequestList){
 			System.out.println(t);
 		}
 		*/
-		
-		
 		//g1.localTE();
 	}
 	
