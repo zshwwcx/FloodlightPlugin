@@ -5,6 +5,7 @@ import java.util.*;
 
 
 class Flow_request{
+	public String fr_id;
 	public String src_id;
 	public String dst_id;
 	public float bandwidth_request;
@@ -17,7 +18,8 @@ class Flow_request{
 	public static int default_priority=1;
 	
 	
-	public Flow_request(String src,String dst,int bandwidth,int delay,int priority){
+	public Flow_request(String id,String src,String dst,int bandwidth,int delay,int priority){
+		this.fr_id=id;
 		this.src_id=src;
 		this.dst_id=dst;
 		this.bandwidth_request=bandwidth;
@@ -29,6 +31,7 @@ class Flow_request{
 	}
 	
 	public Flow_request(){
+		this.fr_id="";
 		this.src_id="";
 		this.dst_id="";
 		this.bandwidth_request=0;
@@ -38,48 +41,65 @@ class Flow_request{
 		this.min_delay=99999;
 		this.priority=default_priority;
 	}
-	
+
+	public void setFrId(String id){
+
+		this.fr_id=id;
+	}
+
 	public void setSrcId(String src){
+
 		this.src_id=src;
 	}
 	
 	public void setDstId(String dst){
+
 		this.dst_id=dst;
 	}
 	
 	public void setBandwidthRequest(int bd){
+
 		this.bandwidth_request=bd;
 	}
 	
 	public void setDelayRequest(int dl){
+
 		this.delay_request=dl;
 	}
 	
 	
 	public void setPriority(int pr){
+
 		this.priority=pr;
 	}
 	
-	public void setIssatisfied(boolean bl){
+	public void setIssatisfied(boolean bl)
+	{
 		this.isSatisfied=bl;
 	}
+
 	public String getSrcId(){
+
 		return this.src_id;
 	}
 	
 	public String getDstId(){
+
 		return this.dst_id;
 	}
 	
 	public float getBandwidthRequest(){
+
 		return this.bandwidth_request;
 	}
 	
 	public int getDelayRequest(){
+
 		return this.delay_request;
 	}
 	
 	public int getPriority(){
+
 		return this.priority;
 	}
 	

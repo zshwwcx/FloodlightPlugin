@@ -22,7 +22,9 @@ public class Graph {
     public static String GraphNodeFile="F:\\java code\\src\\topo\\clusters_domain5 (copy)";
     public static String GraphLinkFile="F:\\java code\\src\\topo\\links_domain5 (copy)";
     public static String GraphFlowReuqestListFile="F:\\java code\\src\\flow_request\\NewFlowRequest.txt";
-    int max_delay=10000000;//表示延迟的最大值，随着实验的真实数值而改变，需要保证的是path的总的延迟（一条path中所有link的延迟之和要小于max_delay）
+    public int max_delay=10000000;//表示延迟的最大值，随着实验的真实数值而改变，需要保证的是path的总的延迟（一条path中所有link的延迟之和要小于max_delay）
+	public static int TE_count=0;
+
 
 	public Graph(String link_file_path,String clusters_file_path){//初始化图，想通过link和clusters两个文件来进行图的初始化，函数参数用文件的String路径来表示，便于后期修改。
 		try{
@@ -327,7 +329,7 @@ public class Graph {
 				String lineTxt;
 				while((lineTxt=bufferReader.readLine())!=null){
 					String[] info_temp=lineTxt.split(" ");
-					flowRequestList.add(new Flow_request(info_temp[0],info_temp[1],Integer.parseInt(info_temp[2]),Integer.parseInt(info_temp[3]),Integer.parseInt(info_temp[4])));
+					flowRequestList.add(new Flow_request(info_temp[0],info_temp[1],info_temp[2],Integer.parseInt(info_temp[3],10),Integer.parseInt(info_temp[4],16),Integer.parseInt(info_temp[5],10)));
 					}
 				read.close();
 			}
@@ -356,6 +358,7 @@ public class Graph {
 
 
 	public void localTE() {
+		TE_count++;
 
 		for (Flow_request temp_flow_request : this.flowRequestList) {
 			int min=9999999;
@@ -415,6 +418,7 @@ public class Graph {
 					}
 				}
 //				这三行用于打印在一轮分配结束之后，所有flow request分配到的带宽情况
+				System.out.println("Flow request id: "+tm.fr_id);
 				System.out.println("Request Bandwidth: "+tm.bandwidth_request);
 				System.out.println("Allocated bandwidth: "+tm.min_bandwidth );
 				System.out.println("Flowrequest priority: "+tm.priority);
@@ -431,6 +435,19 @@ public class Graph {
 				System.out.print(tmp[i]+" ");
 			}
 			System.out.println();*/
+		}
+	}
+
+	public void printSynchronizationInformation(){
+		for (Flow_request tm : this.flowRequestList) {
+			if(tm.min_bandwidth==99999.0){
+				tm.min_bandwidth=0;
+			}
+			//System.out.print(tm.src_id+" -> "+" "+tm.dst_id+" "+tm.AllocatedPath + " || Allocated Bandwidth: ");
+			//System.out.println(tm.min_bandwidth);
+//			printPath(tm.src_id,tm.dst_id);
+			ArrayList<String> out_for_print=getStringPath(tm.src_id,tm.dst_id);
+			System.out.println(tm.fr_id+" "+tm.src_id+" "+tm.dst_id+" "+tm.bandwidth_request+" "+tm.min_bandwidth+" "+TE_count);
 		}
 	}
 	
@@ -506,7 +523,7 @@ public class Graph {
 					float bandwidth_regenerated=fl.bandwidth_request-fl.min_bandwidth;
 					DecimalFormat fnum=new DecimalFormat("##0");//此处将最终的bandwidth取整，是因为在debug中，二次读取文件的flowrequest过程，代码329行对于0.00的字符串数字转化为int有bug.
 					String bd=fnum.format(bandwidth_regenerated);
-					String content=fl.src_id+" "+fl.dst_id+" "+bd+" "+fl.delay_request+" "+fl.priority+"\n";
+					String content=fl.fr_id+" "+fl.src_id+" "+fl.dst_id+" "+bd+" "+fl.delay_request+" "+fl.priority+"\n";
 					file_write.write(content);
 				}
 			}
@@ -532,7 +549,8 @@ public class Graph {
 	public void run(){
 		this.collectFlowRequest(GraphFlowReuqestListFile);
 		this.localTE();
-		this.printResult();
+		//this.printResult();
+		this.printSynchronizationInformation();
 		this.topologyUpdate();
 		this.flowrequestReGenerate();
 	}
@@ -582,10 +600,12 @@ public class Graph {
 	public void FlowRequestFileGenerate_2(int FlowRequestNumber) throws FileNotFoundException {//FlowRequestNumber为数据流需求文件中需要产生的数据流数目
 		Random rand=new Random(43);
 		int FlowSize=this.nodelist.size();
+		int count_num=0;
 		try {
 			File file_out = new File(GraphFlowReuqestListFile);
 			FileWriter file_write=new FileWriter(file_out,false);
 			for (int i = 0; i < FlowRequestNumber; i++) {
+				count_num++;
 				int nodeStartNumber=rand.nextInt(FlowSize);
 				int nodeEndNumber=rand.nextInt(FlowSize);
 				int bandwidthRequest=rand.nextInt(20)+1;
@@ -594,7 +614,7 @@ public class Graph {
 				if(nodeStartNumber==nodeEndNumber){
 					nodeEndNumber=rand.nextInt(FlowSize);
 				}
-				String content=this.nodelist.get(nodeStartNumber).ID+" "+this.nodelist.get(nodeEndNumber).ID+" "+bandwidthRequest+" "+delayRequest+" "+priorityRequest+"\n";
+				String content=count_num+" "+this.nodelist.get(nodeStartNumber).ID+" "+this.nodelist.get(nodeEndNumber).ID+" "+bandwidthRequest+" "+delayRequest+" "+priorityRequest+"\n";
 				file_write.write(content);
 			}
 			file_write.close();
@@ -602,6 +622,7 @@ public class Graph {
 			e.printStackTrace();
 		}
 	}
+
 	
 	
 	
@@ -653,10 +674,12 @@ public class Graph {
 		}
 		*/
 		long start=Calendar.getInstance().getTimeInMillis();//用于测试系统TE时间
-		g1.FlowRequestFileGenerate_2(10000);//产生数据流文件的函数，如果希望沿用之前的数据流文件，则不需要运行此函数
+		g1.FlowRequestFileGenerate_2(100);//产生数据流文件的函数，如果希望沿用之前的数据流文件，则不需要运行此函数
 		//g1.collectFlowRequest("E:\\代码\\java\\FloodlightPlugin\\src\\Flow Request.txt");
 	 	//g1.localTE();
 //		for(int i=0;i<10;i++) {
+			g1.run();
+			g1.run();
 			g1.run();
 //		}
 		long end=Calendar.getInstance().getTimeInMillis();
