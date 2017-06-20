@@ -19,9 +19,11 @@ public class Graph {
 	ArrayList<Link> linklist=new ArrayList<>();//存储图的所有link信息
 	ArrayList<Flow_request> flowRequestList=new ArrayList<>();//存储需要进行TE的所有流需求
 
-    public static String GraphNodeFile="F:\\java code\\src\\topo\\clusters_domain5 (copy)";
-    public static String GraphLinkFile="F:\\java code\\src\\topo\\links_domain5 (copy)";
-    public static String GraphFlowReuqestListFile="F:\\java code\\src\\flow_request\\NewFlowRequest.txt";
+	public static String RootDirectory="/home/haven2/h123";//"F:\\java code\\src"
+
+    public static String GraphNodeFile=RootDirectory+"/clusters";
+    public static String GraphLinkFile=RootDirectory+"/links";
+    public static String GraphFlowReuqestListFile=RootDirectory+"/NewFlowRequest.txt";
     public int max_delay=10000000;//表示延迟的最大值，随着实验的真实数值而改变，需要保证的是path的总的延迟（一条path中所有link的延迟之和要小于max_delay）
 	public static int TE_count=0;
 
@@ -438,6 +440,42 @@ public class Graph {
 		}
 	}
 
+	public void printResult_1(){//新的TE结果输出函数，输出TE结果和同步信息的结果，TE结果按照每条数据流请求的TE结果输出一个文件,文件名按这种形式"/home/havne2/h123/TE/"+src+"-"+dst，同步信息输出到一个文件夹下面即可
+		for (Flow_request tm : this.flowRequestList) {
+			if (tm.min_bandwidth == 99999.0) {
+				tm.min_bandwidth = 0;
+			}
+			String file_TE_out_string=RootDirectory+"/TE/"+tm.src_id+"-"+tm.dst_id;
+			String file_syn_out_string=RootDirectory+"/singleTopo/bandwithAllocation";
+			ArrayList<String> out_for_print=getStringPath(tm.src_id,tm.dst_id);
+			try {
+				File file_out = new File(file_TE_out_string);
+				FileWriter file_write=new FileWriter(file_out,false);
+				if(out_for_print!=null) {
+					for (int index_out = 0; index_out < out_for_print.size() - 1; index_out++) {
+						Link tmp_out = getLink(out_for_print.get(index_out), out_for_print.get(index_out + 1));
+						if (tmp_out != null) {
+							String file_content=tmp_out.start_switch+" "+tmp_out.outport+"\n"+tmp_out.end_switch+" "+ tmp_out.outport+"\n";
+							file_write.write(file_content);
+						}
+					}
+				}
+
+				File file_out_1 = new File(file_syn_out_string);
+				FileWriter file_write_1=new FileWriter(file_out_1,true);
+				String file_syn_content=tm.fr_id+" "+tm.src_id+" "+tm.dst_id+" "+tm.bandwidth_request+" "+tm.min_bandwidth+" "+TE_count+"\n";
+				file_write_1.write(file_syn_out_string);
+
+				file_write.close();
+				file_write_1.close();
+
+			} catch (IOException e) {
+			e.printStackTrace();
+			}
+		}
+	}
+
+
 	public void printSynchronizationInformation(){
 		for (Flow_request tm : this.flowRequestList) {
 			if(tm.min_bandwidth==99999.0){
@@ -550,7 +588,8 @@ public class Graph {
 		this.collectFlowRequest(GraphFlowReuqestListFile);
 		this.localTE();
 		//this.printResult();
-		this.printSynchronizationInformation();
+//		this.printSynchronizationInformation();
+		this.printResult_1();
 		this.topologyUpdate();
 		this.flowrequestReGenerate();
 	}
@@ -674,12 +713,12 @@ public class Graph {
 		}
 		*/
 		long start=Calendar.getInstance().getTimeInMillis();//用于测试系统TE时间
-		g1.FlowRequestFileGenerate_2(100);//产生数据流文件的函数，如果希望沿用之前的数据流文件，则不需要运行此函数
+		g1.FlowRequestFileGenerate_2(1000);//产生数据流文件的函数，如果希望沿用之前的数据流文件，则不需要运行此函数
 		//g1.collectFlowRequest("E:\\代码\\java\\FloodlightPlugin\\src\\Flow Request.txt");
 	 	//g1.localTE();
 //		for(int i=0;i<10;i++) {
-			g1.run();
-			g1.run();
+//			g1.run();
+//			g1.run();
 			g1.run();
 //		}
 		long end=Calendar.getInstance().getTimeInMillis();
