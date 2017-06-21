@@ -20,10 +20,9 @@ public class Graph {
 	ArrayList<Flow_request> flowRequestList=new ArrayList<>();//存储需要进行TE的所有流需求
 
 	public static String RootDirectory="/home/haven2/h123";//"F:\\java code\\src"
-
-    public static String GraphNodeFile=RootDirectory+"/clusters";
-    public static String GraphLinkFile=RootDirectory+"/links";
-    public static String GraphFlowReuqestListFile=RootDirectory+"/NewFlowRequest.txt";
+    public static String GraphNodeFile="F:\\java code\\src\\topo\\clusters_domain5 (copy)";
+    public static String GraphLinkFile="F:\\java code\\src\\topo\\links_domain5 (copy)";
+    public static String GraphFlowReuqestListFile="F:\\java code\\src\\flow_request\\NewFlowRequest.txt";
     public int max_delay=10000000;//表示延迟的最大值，随着实验的真实数值而改变，需要保证的是path的总的延迟（一条path中所有link的延迟之和要小于max_delay）
 	public static int TE_count=0;
 
@@ -445,8 +444,8 @@ public class Graph {
 			if (tm.min_bandwidth == 99999.0) {
 				tm.min_bandwidth = 0;
 			}
-			String file_TE_out_string=RootDirectory+"/TE/"+tm.src_id+"-"+tm.dst_id;
-			String file_syn_out_string=RootDirectory+"/singleTopo/bandwithAllocation";
+			String file_TE_out_string="F:\\output\\"+tm.src_id.substring(21)+"-"+tm.dst_id.substring(21);
+			String file_syn_out_string="F:\\output\\1\\bandwithAllocation";
 			ArrayList<String> out_for_print=getStringPath(tm.src_id,tm.dst_id);
 			try {
 				File file_out = new File(file_TE_out_string);
@@ -455,7 +454,7 @@ public class Graph {
 					for (int index_out = 0; index_out < out_for_print.size() - 1; index_out++) {
 						Link tmp_out = getLink(out_for_print.get(index_out), out_for_print.get(index_out + 1));
 						if (tmp_out != null) {
-							String file_content=tmp_out.start_switch+" "+tmp_out.outport+"\n"+tmp_out.end_switch+" "+ tmp_out.outport+"\n";
+							String file_content=tmp_out.start_switch+" "+tmp_out.outport+"\n"+tmp_out.end_switch+" "+ tmp_out.inport+"\n";
 							file_write.write(file_content);
 						}
 					}
