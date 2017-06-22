@@ -442,13 +442,14 @@ public class Graph {
 	public void printResult_1(){//新的TE结果输出函数，输出TE结果和同步信息的结果，TE结果按照每条数据流请求的TE结果输出一个文件,文件名按这种形式"/home/havne2/h123/TE/"+src+"-"+dst，同步信息输出到一个文件夹下面即可
 		String file_syn_out_string="F:\\output\\1\\bandwithAllocation";
 
-		try {
+		//如果需要对同步文件进行清零，则执行下面的代码
+		/*try {
 			File file_out_2 = new File(file_syn_out_string);
 			FileWriter file_write_2 = new FileWriter(file_out_2, false);
 			file_write_2.close();
 		}catch (IOException e) {
 			e.printStackTrace();
-		}
+		}*/
 
 		for (Flow_request tm : this.flowRequestList) {
 			if (tm.min_bandwidth == 99999.0) {
