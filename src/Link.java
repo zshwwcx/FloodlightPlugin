@@ -7,6 +7,7 @@ class Link{
 	public String inport;
 	public int delay;
 	public float bandwidth;
+	public float initial_bandwidth;
 	public boolean isAllocated;
 	public HashMap<Flow_request,Float> allocated_bandwidth=new HashMap<Flow_request,Float>();
 	
@@ -17,6 +18,7 @@ class Link{
 		this.inport=in_port;
 		this.delay=link_delay;
 		this.bandwidth=bandwidth;
+		this.initial_bandwidth=bandwidth;
 		this.isAllocated=false;
 		allocated_bandwidth.clear();
 	}
@@ -28,6 +30,7 @@ class Link{
 		this.inport="0";
 		this.delay=0;
 		this.bandwidth=0;
+		this.initial_bandwidth=0;
 		this.isAllocated=false;
 		allocated_bandwidth.clear();
 	}

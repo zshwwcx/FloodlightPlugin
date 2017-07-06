@@ -18,11 +18,15 @@ public class Graph {
 	ArrayList<Node> nodelist=new ArrayList<>();//存储图的所有节点信息
 	ArrayList<Link> linklist=new ArrayList<>();//存储图的所有link信息
 	ArrayList<Flow_request> flowRequestList=new ArrayList<>();//存储需要进行TE的所有流需求
+	ArrayList<Flow_request> crossDomainFlowRequestList=new ArrayList<>();//存储在数据流请求收集之后，预处理过程中发现的跨域数据流请求
+	ArrayList<Flow_request> InsideDomainFlowRequestList=new ArrayList<>();//存储在数据流请求收集之后，预处理过程中发现的域内数据刘请求
 
-	public static String RootDirectory="/home/haven2/h123";//"F:\\java code\\src"
     public static String GraphNodeFile="F:\\java code\\src\\topo\\clusters_domain5 (copy)";
     public static String GraphLinkFile="F:\\java code\\src\\topo\\links_domain5 (copy)";
     public static String GraphFlowReuqestListFile="F:\\java code\\src\\flow_request\\NewFlowRequest.txt";
+    public static String crossDomainFlowRequestListFile="F:\\java code\\src\\flow_request\\crossDomainFlowRequest.txt";
+    public static String InDomainFlowRequestListFile="F:\\java code\\src\\flow_request\\InDomainFlowRequest.txt";
+    public static String flowBreakDownPath="F:\\java code\\src\\flow_request\\";
     public int max_delay=10000000;//表示延迟的最大值，随着实验的真实数值而改变，需要保证的是path的总的延迟（一条path中所有link的延迟之和要小于max_delay）
 	public static int TE_count=0;
 
@@ -321,6 +325,8 @@ public class Graph {
 	public void collectFlowRequest(String FlowRequestFilePath){//读取产生的流量请求，将其存入到图的flowRequestList列表中并初始化,暂定每5min一次
 		//File的格式为每条流的请求为一行，分别为（1）源地址（2）目的地址（3）带宽要求（4）延迟要求（5）优先级,变量之间用空格符分隔开
 		this.flowRequestList.clear();//执行列表的清理，防止上次收集过程中的数据残存在本次的列表中。
+		this.crossDomainFlowRequestList.clear();
+		this.InsideDomainFlowRequestList.clear();
 		try{
 			String encoding="utf-8";
 			File file_in=new File(FlowRequestFilePath);
@@ -336,6 +342,39 @@ public class Graph {
 			}
 		}catch(Exception e){
 			System.out.println("Error:读取数据流请求文件出错！");
+			e.printStackTrace();
+		}
+	}
+
+	public void crossDomianRequestProcess(){//对跨域数据流和域内数据流请求进行一次划分，为下面的跨域数据流分割做准备,将跨域数据流请求写入crossDomainFlowRequestListFile文件中，将域内数据流请求写入InDomainFlowRequestListFile文件中
+		for(Flow_request tmp_request:this.flowRequestList){
+			if(tmp_request.cross_domain_flag==true){
+				this.crossDomainFlowRequestList.add(tmp_request);
+			}else if(tmp_request.cross_domain_flag==false){
+				this.InsideDomainFlowRequestList.add(tmp_request);
+			}
+		}
+
+		try {
+			File file_out = new File(crossDomainFlowRequestListFile);
+			FileWriter file_write = new FileWriter(file_out, false);
+			for(Flow_request tmp:this.crossDomainFlowRequestList) {
+				String crossDomainFlowRequestString = tmp.fr_id+" "+tmp.src_id + " "+tmp.dst_id+" "+tmp.bandwidth_request+" "+tmp.delay_request+" "+tmp.priority+"\n";
+				file_write.write(crossDomainFlowRequestString);
+			}
+			file_write.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		try{
+			File file_out_1=new File(InDomainFlowRequestListFile);
+			FileWriter file_write_1=new FileWriter(file_out_1,false);
+			for(Flow_request tmp_1:this.InsideDomainFlowRequestList){
+				String InDomainFlowRequestString=tmp_1.fr_id+" "+ tmp_1.src_id+" "+tmp_1.dst_id+" "+tmp_1.bandwidth_request+" "+tmp_1.delay_request+" "+ tmp_1.priority+"\n";
+				file_write_1.write(InDomainFlowRequestString);
+			}
+			file_write_1.close();
+		}catch(IOException e){
 			e.printStackTrace();
 		}
 	}
@@ -358,7 +397,40 @@ public class Graph {
 	}
 
 
-	public void localTE() {
+	public void localTE() {//域内controller处理数据流请求的TE函数
+		TE_count++;
+		for (Flow_request temp_flow_request : this.InsideDomainFlowRequestList) {
+			int min=9999999;
+			this.dijkstra_flow_request_path_write(temp_flow_request);
+			for (Link temp : temp_flow_request.AllocatedPath) {
+				temp.allocated_bandwidth.put(temp_flow_request, temp_flow_request.bandwidth_request);
+				if(temp.delay<min){
+					min=temp.delay;
+				}
+			}
+			temp_flow_request.min_delay=min;
+		}
+		for (Link tmp : this.linklist) {
+			int sum_priority = 0;
+			for (Flow_request key : tmp.allocated_bandwidth.keySet()) {
+				sum_priority += key.priority;
+			}
+			for (Flow_request key : tmp.allocated_bandwidth.keySet()) {
+				if(key.AllocatedPath.size()!=0) {
+					float band_width_temp = tmp.bandwidth * ((float) key.priority / sum_priority);
+					if (band_width_temp <= key.min_bandwidth&&band_width_temp<=key.bandwidth_request) {
+						key.min_bandwidth = band_width_temp;
+						tmp.isAllocated = true;
+					}
+					else if(band_width_temp<=key.min_bandwidth&&band_width_temp>=key.bandwidth_request){
+						key.min_bandwidth=key.bandwidth_request;
+					}
+				}
+			}
+		}
+	}
+
+	public void TE(){//跨域controller用于处理跨域数据流的函数
 		TE_count++;
 
 		for (Flow_request temp_flow_request : this.flowRequestList) {
@@ -388,16 +460,90 @@ public class Graph {
 					else if(band_width_temp<=key.min_bandwidth&&band_width_temp>=key.bandwidth_request){
 						key.min_bandwidth=key.bandwidth_request;
 					}
-				}//else{//带宽更新操作转移到topoUpdate函数中进行
-				//tmp.bandwidth-=band_width_temp;
-				//if(tmp.bandwidth<=0){
-				//	tmp.isAllocated=true;
-				//}
+				}
 			}
 		}
-		//Debug 用，打印分配完成后，每条数据流所获得的分配链路流量
-
 	}
+
+	public void flowBreakDown(){//将跨域controller分配完成后的数据流，分解为多个域内数据流请求，按域名写入文件
+		for(Flow_request tm:this.flowRequestList){
+			if(tm.min_bandwidth==99999.0){
+				tm.min_bandwidth=0;
+			}
+			ArrayList<String> out_for_write=getStringPath(tm.src_id,tm.dst_id);
+			if(out_for_write!=null){
+				for(int index_out=0;index_out<out_for_write.size()-1;index_out++) {
+					Link tmp_out=getLink(out_for_write.get(index_out),out_for_write.get(index_out+1));
+					if(tmp_out!=null){
+						int src_num=Integer.parseInt(tmp_out.start_switch.substring(21));
+						int src_domain=0;
+						if(src_num>=1&&src_num<=150){
+							src_domain=1;
+						}else if(src_num>=151&&src_num<=286){
+							src_domain=2;
+						}else if(src_num>=287&&src_num<=427){
+							src_domain=3;
+						}else if(src_num>=428&&src_num<=568){
+							src_domain=4;
+						} else if(src_num>=569&&src_num<=717){
+							src_domain=5;
+						}else{
+							src_domain=0;
+						}
+
+						int dst_num=Integer.parseInt(tmp_out.end_switch.substring(21));
+						int dst_domain=0;
+						if(dst_num>=1&&dst_num<=150){
+							dst_domain=1;
+						}else if(dst_num>=151&&dst_num<=286){
+							dst_domain=2;
+						}else if(dst_num>=287&&dst_num<=427){
+							dst_domain=3;
+						}else if(dst_num>=428&&dst_num<=568){
+							dst_domain=4;
+						} else if(dst_num>=569&&dst_num<=717){
+							dst_domain=5;
+						}else{
+							dst_domain=0;
+						}
+						if(src_domain==dst_domain&&src_domain!=0){
+							String local_file_path=flowBreakDownPath+"_"+src_domain;
+							try{
+								File file_out = new File(local_file_path);
+								FileWriter file_write = new FileWriter(file_out, true);
+								String fr_id=tm.fr_id+"_"+index_out+"#";
+								String content_write=fr_id+" "+tmp_out.start_switch+" "+tmp_out.end_switch+" "+tm.min_bandwidth+" "+tm.delay_request+"\n";
+								file_write.write(content_write);
+								file_write.close();
+							}catch(IOException e){
+								e.printStackTrace();
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	public void flowMerge(){
+		try{
+			File crossDomainFlowTEresult=new File("F:\\output\\2\\crossDomainFlowTEResult");//存储在域内进行TE之后的所有跨域数据流的结果,文件中写的是跨域数据流的序号以及所分配的带宽。
+			FileWriter file_write = new FileWriter(crossDomainFlowTEresult, true);
+			for(Flow_request tm:this.InsideDomainFlowRequestList) {
+				if (tm.min_bandwidth == 99999.0) {
+					tm.min_bandwidth = 0;
+				}
+			if(tm.fr_id.endsWith("#")){
+					String content=tm.fr_id.substring(0,tm.fr_id.length()-2)+" "+tm.min_bandwidth+"\n";
+				}
+			}
+			file_write.close();
+		}catch (IOException e){
+			e.printStackTrace();
+		}
+	}
+
+
 
 	public void printResult(){//此函数用于打印TE输出结果，可以将函数改编为输出到文件,按照TE轮次，每一轮生成一个新的TE结果文件,TEoutput_n.txt
 		for (Flow_request tm : this.flowRequestList) {
@@ -461,6 +607,9 @@ public class Graph {
 			try {
 				File file_out = new File(file_TE_out_string);
 				FileWriter file_write=new FileWriter(file_out,false);
+				String start_switch_str=tm.src_id+" 1\n";
+				String end_switch_str=tm.dst_id+" 1\n";
+				file_write.write(start_switch_str);
 				if(out_for_print!=null) {
 					for (int index_out = 0; index_out < out_for_print.size() - 1; index_out++) {
 						Link tmp_out = getLink(out_for_print.get(index_out), out_for_print.get(index_out + 1));
@@ -470,6 +619,7 @@ public class Graph {
 						}
 					}
 				}
+				file_write.write(end_switch_str);
 
 				File file_out_1 = new File(file_syn_out_string);
 				FileWriter file_write_1=new FileWriter(file_out_1,true);
@@ -498,6 +648,11 @@ public class Graph {
 			System.out.println(tm.fr_id+" "+tm.src_id+" "+tm.dst_id+" "+tm.bandwidth_request+" "+tm.min_bandwidth+" "+TE_count);
 		}
 	}
+
+	public void calculate_utilization(){//计算整个网络中link的利用率，但是需要在每个controller同步link的带宽分配之后，才能计算。
+
+	}
+
 	
 	
 	public void addLink(String src_point,String dst_point,int delay,int bandwidth){//添加从src到dst的链路
@@ -594,14 +749,26 @@ public class Graph {
 	}
 	
 	
-	public void run(){
-		this.collectFlowRequest(GraphFlowReuqestListFile);
-		this.localTE();
+	public void run(){//这个是域内controller需要运行的run()函数
+		this.collectFlowRequest(GraphFlowReuqestListFile);//(1)
+		this.crossDomianRequestProcess();//(2)在这一步结束，将crossDomainFlowRequestListFile文件中的内容传送给跨域controller，文件中存储的是所有的跨域数据流请求
+
+		//域内controller接受到跨域controller发送来的分解的数据流请求文件后，添加到自己的域内数据流list中，进行域内TE
+		this.localTE();//(6)运行域内的TE
 		//this.printResult();
 //		this.printSynchronizationInformation();
-		this.printResult_1();
-		this.topologyUpdate();
-		this.flowrequestReGenerate();
+		//this.printResult_1();
+		//this.topologyUpdate();
+		//this.flowrequestReGenerate();
+		this.flowMerge();//(7)localTE完成之后，将跨域数据流进行统计，写到F:\output\2\crossDomainFlowTEResult文件中，传送给跨域controller
+	}
+
+	public void run_1(){}{//跨域controller需要运行的run()函数
+		this.collectFlowRequest(GraphFlowReuqestListFile);//(3)收集所有域内controller上传来的文件所整合而成的跨域数据刘请求
+		this.TE();//(4)运行跨域数据流请求的TE
+		this.flowBreakDown();//(5)将跨域数据流分解为一个个的域内数据流，在此函数运行完后，将flowBreakDownPath文件夹下的文件按照domain名称发送给每一个域内控制器
+
+		//
 	}
 
 	public void test(){
@@ -723,7 +890,7 @@ public class Graph {
 		}
 		*/
 		long start=Calendar.getInstance().getTimeInMillis();//用于测试系统TE时间
-		g1.FlowRequestFileGenerate_2(1000);//产生数据流文件的函数，如果希望沿用之前的数据流文件，则不需要运行此函数
+		g1.FlowRequestFileGenerate_2(10000);//产生数据流文件的函数，如果希望沿用之前的数据流文件，则不需要运行此函数
 		//g1.collectFlowRequest("E:\\代码\\java\\FloodlightPlugin\\src\\Flow Request.txt");
 	 	//g1.localTE();
 //		for(int i=0;i<10;i++) {

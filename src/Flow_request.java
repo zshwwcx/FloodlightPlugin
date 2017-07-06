@@ -7,7 +7,10 @@ import java.util.*;
 class Flow_request{
 	public String fr_id;
 	public String src_id;
+	public int src_domain;//源节点所在的域
 	public String dst_id;
+	public int dst_domain;//目的节点所在的域
+	public boolean cross_domain_flag;//是否是跨域数据流请求的标识
 	public float bandwidth_request;
 	public int delay_request;
 	public int priority;
@@ -28,12 +31,53 @@ class Flow_request{
 		this.min_bandwidth=99999;
 		this.min_delay=99999;
 		this.priority=priority;
+
+		String src_id_substring=src_id.substring(21);
+		int temp1=Integer.parseInt(src_id_substring);
+		if(temp1>=1&&temp1<=150){
+			src_domain=1;
+		}else if(temp1>=151&&temp1<=286){
+			src_domain=2;
+		}else if(temp1>=287&&temp1<=427){
+			src_domain=3;
+		}else if(temp1>=428&&temp1<=568){
+			src_domain=4;
+		} else if(temp1>=569&&temp1<=717){
+			src_domain=5;
+		}else{
+			src_domain=0;
+		}
+		String dst_id_substring=dst_id.substring(21);
+		int temp2=Integer.parseInt(dst_id_substring);
+		if(temp2>=1&&temp2<=150){
+			dst_domain=1;
+		}else if(temp2>=151&&temp2<=286){
+			dst_domain=2;
+		}else if(temp2>=287&&temp2<=427){
+			dst_domain=3;
+		}else if(temp2>=428&&temp2<=568){
+			dst_domain=4;
+		} else if(temp2>=569&&temp2<=717){
+			dst_domain=5;
+		}else{
+			dst_domain=0;
+		}
+
+		if(src_domain==dst_domain){
+			this.cross_domain_flag=false;
+		}else{
+			this.cross_domain_flag=true;
+		}
+
 	}
 	
 	public Flow_request(){
 		this.fr_id="";
 		this.src_id="";
+		this.src_domain=0;
 		this.dst_id="";
+		this.dst_domain=0;
+		this.cross_domain_flag=false;
 		this.bandwidth_request=0;
 		this.isSatisfied=false;
 		this.delay_request=99999;
