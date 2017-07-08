@@ -1,4 +1,5 @@
-/**
+/**数据流仿真所需的转换函数，输入文件input_file为数据流请求文件，输出文件为mininet中添加的函数所需要的输入文件，输入文件的格式为ping原node的名字，目的node的名字，Ping所需要的带宽
+ * 带宽部分还需进行处理，将其转换为ping指令中-c后面的次数。
  * Created by haven on 2017/7/8.
  */
 import java.util.*;
