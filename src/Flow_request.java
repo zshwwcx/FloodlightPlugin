@@ -32,8 +32,8 @@ class Flow_request{
 		this.min_delay=99999;
 		this.priority=priority;
 
-		String src_id_substring=src_id.substring(21);
-		int temp1=Integer.parseInt(src_id_substring);
+		String src_id_substring=src_id.substring(18,20)+src_id.substring(21);
+		int temp1=Integer.parseInt(src_id_substring,16);
 		if(temp1>=1&&temp1<=150){
 			src_domain=1;
 		}else if(temp1>=151&&temp1<=286){
