@@ -313,7 +313,7 @@ public class Graph {
 	}
 
 
-	public int getDistance(String src,String dst){//获取从src到达dst的路径的最短延迟
+	public int getDelay(String src,String dst){//获取从src到达dst的路径的最短延迟
 		int distance=0;
 		ArrayList<String> path=this.getStringPath(src, dst);
 		for(int i=0;i<path.size()-1;i++){
