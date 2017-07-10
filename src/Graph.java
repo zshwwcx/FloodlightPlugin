@@ -337,7 +337,7 @@ public class Graph {
 				while((lineTxt=bufferReader.readLine())!=null){
 					String[] info_temp=lineTxt.split(" ");
 					flowRequestList.add(new Flow_request(info_temp[0],info_temp[1],info_temp[2],Integer.parseInt(info_temp[3],10),Integer.parseInt(info_temp[4],16),Integer.parseInt(info_temp[5],10)));
-					}
+				}
 				read.close();
 			}
 		}catch(Exception e){
@@ -763,7 +763,7 @@ public class Graph {
 		this.flowMerge();//(7)localTE完成之后，将跨域数据流进行统计，写到F:\output\2\crossDomainFlowTEResult文件中，传送给跨域controller
 	}
 
-	public void run_1(){}{//跨域controller需要运行的run()函数
+	public void run_1(){//跨域controller需要运行的run()函数
 		this.collectFlowRequest(GraphFlowReuqestListFile);//(3)收集所有域内controller上传来的文件所整合而成的跨域数据刘请求
 		this.TE();//(4)运行跨域数据流请求的TE
 		this.flowBreakDown();//(5)将跨域数据流分解为一个个的域内数据流，在此函数运行完后，将flowBreakDownPath文件夹下的文件按照domain名称发送给每一个域内控制器
