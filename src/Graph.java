@@ -121,12 +121,11 @@ public class Graph {
 		return null;
 	}
 
-	public Link getLink(String start_switch,String end_switch){//根据两个节点获取Link
+	public Link getLink(String start_switch,String end_switch){//根据两个节点获取直连的Link
 		for(Link tmp:this.linklist){
 			if(tmp.getLinkStart().equals(start_switch)&&tmp.getLinkEnd().equals(end_switch)){
 				return tmp;
 			}
-
 		}
 		return null;
 	}
@@ -318,9 +317,15 @@ public class Graph {
 				output_string.add(getId(output_result.get(j)));
 			}
 			return output_string;
-		}else{
+		}else if(output_result.isEmpty()&&this.getLink(src,dst)!=null){//防止两个节点恰好是一条初始链路直连的情况下，output显示can not find path.
+			output_result.add(start);
+			output_result.add(end);
+			for(int j=0;j<output_result.size();j++){
+				output_string.add(getId(output_result.get(j)));
+			}
+			return output_string;
+		}else
 			return null;
-		}
 	}
 
 
@@ -908,12 +913,12 @@ public class Graph {
 			}
 			System.out.println();
 		}*/
-//		Graph g1=new Graph(GraphLinkFile,GraphNodeFile);
-/*		long start=Calendar.getInstance().getTimeInMillis();//用于测试系统TE时间
+		Graph g1=new Graph(GraphLinkFile,GraphNodeFile);
+		long start=Calendar.getInstance().getTimeInMillis();//用于测试系统TE时间
 		g1.FlowRequestFileGenerate_2(10000);//产生数据流文件的函数，如果希望沿用之前的数据流文件，则不需要运行此函数
 		g1.run();
 		long end=Calendar.getInstance().getTimeInMillis();
-		System.out.println("Run time :"+(double)(end-start)/1000);//用于测试系统TE时间*/
+		System.out.println("Run time :"+(double)(end-start)/1000);//用于测试系统TE时间
 
 
 		//g_abstract.getDelay(MarginalSwitch[0][0],MarginalSwitch[2][0]);
