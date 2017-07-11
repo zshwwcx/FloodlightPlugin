@@ -21,6 +21,9 @@ public class Graph {
 	ArrayList<Flow_request> crossDomainFlowRequestList=new ArrayList<>();//存储在数据流请求收集之后，预处理过程中发现的跨域数据流请求
 	ArrayList<Flow_request> InsideDomainFlowRequestList=new ArrayList<>();//存储在数据流请求收集之后，预处理过程中发现的域内数据刘请求
 
+	public static int domain=0;//domain从0到4，在每一个不同的服务器程序中，采用当前topo所在的domain
+	public static String MarginalNodesFilePath="F:\\java code\\src\\topo\\MarginalNodes";
+	public static String MarginalLinksFilePath="F:\\java code\\src\\topo\\MarginalLinks";
     public static String GraphNodeFile="F:\\java code\\src\\topo\\clusters_domain5 (copy)";
     public static String GraphLinkFile="F:\\java code\\src\\topo\\links_domain5 (copy)";
     public static String GraphFlowReuqestListFile="F:\\java code\\src\\flow_request\\NewFlowRequest.txt";
@@ -29,14 +32,15 @@ public class Graph {
     public static String flowBreakDownPath="F:\\java code\\src\\flow_request\\";
     public int max_delay=10000000;//表示延迟的最大值，随着实验的真实数值而改变，需要保证的是path的总的延迟（一条path中所有link的延迟之和要小于max_delay）
 	public static int TE_count=0;
-
+	public static String[][] MarginalSwitch={{"00:00:00:00:00:00:00:3a","00:00:00:00:00:00:00:6c"},{"00:00:00:00:00:00:00:9d","00:00:00:00:00:00:00:a0"},{"00:00:00:00:00:00:01:3f","00:00:00:00:00:00:01:43"},{"00:00:00:00:00:00:01:bd","00:00:00:00:00:00:02:12"},{"00:00:00:00:00:00:02:5a","00:00:00:00:00:00:02:5c"}};
+	public String[] localMarginalSwitch={" "," "};
+	public int[][] marginalSwitchDistance=new int[10][10];
 
 	public Graph(String link_file_path,String clusters_file_path){//初始化图，想通过link和clusters两个文件来进行图的初始化，函数参数用文件的String路径来表示，便于后期修改。
 		try{
-			String encoding="utf-8";
 			File file_in1=new File(clusters_file_path);
 			if(file_in1.isFile()&&file_in1.exists()){
-				InputStreamReader read=new InputStreamReader(new FileInputStream(file_in1),encoding);
+				InputStreamReader read=new InputStreamReader(new FileInputStream(file_in1));
 				BufferedReader bufferReader=new BufferedReader(read);
 				String lineTxt;
 				while((lineTxt=bufferReader.readLine())!=null){
@@ -47,7 +51,7 @@ public class Graph {
 
 			File file_in2=new File(link_file_path);
 			if(file_in2.isFile()&&file_in2.exists()){
-				InputStreamReader read2=new InputStreamReader(new FileInputStream(file_in2),encoding);
+				InputStreamReader read2=new InputStreamReader(new FileInputStream(file_in2));
 				BufferedReader bufferReader=new BufferedReader(read2);
 				String lineTxt;
 				while((lineTxt=bufferReader.readLine())!=null){
@@ -81,6 +85,31 @@ public class Graph {
 		}catch(Exception e){
 			System.out.println("Error:读取文件过程中出现错误！");
 			e.printStackTrace();
+		}
+
+		switch(domain){
+			case 0:
+				localMarginalSwitch[0]="00:00:00:00:00:00:00:3a";
+				localMarginalSwitch[1]="00:00:00:00:00:00:00:6c";
+				break;
+			case 1:
+				localMarginalSwitch[0]="00:00:00:00:00:00:00:9d";
+				localMarginalSwitch[1]="00:00:00:00:00:00:00:a0";
+				break;
+			case 2:
+				localMarginalSwitch[0]="00:00:00:00:00:00:01:3f";
+				localMarginalSwitch[1]="00:00:00:00:00:00:01:43";
+				break;
+			case 3:
+				localMarginalSwitch[0]="00:00:00:00:00:00:01:bd";
+				localMarginalSwitch[1]="00:00:00:00:00:00:02:12";
+				break;
+			case 4:
+				localMarginalSwitch[0]="00:00:00:00:00:00:02:5a";
+				localMarginalSwitch[1]="00:00:00:00:00:00:02:5c";
+				break;
+			default:
+				break;
 		}
 	}
 
@@ -292,33 +321,18 @@ public class Graph {
 		}else{
 			return null;
 		}
-
-		/*int start=getNum(src);//获取src在nodelist中的下标
-		int end=getNum(dst);//获取dst在nodelist中的下标
-		ArrayList<Integer> result=dijkstra_prototype(start);
-		ArrayList<String> StringResult= new ArrayList<>();
-		StringResult.clear();
-		//result.add(getNum(dst));
-		if(result.contains(end)){
-			int end_index=result.indexOf(end);
-			//result.add(0, start);
-			for(int i=0;i<=end_index;i++){
-				StringResult.add(getId(result.get(i)));
-			}
-			return StringResult;
-		}
-		else
-			System.out.println("Can not find the path from "+src+" to the "+dst);
-			return null;*/
 	}
 
 
 	public int getDelay(String src,String dst){//获取从src到达dst的路径的最短延迟
 		int distance=0;
 		ArrayList<String> path=this.getStringPath(src, dst);
-		for(int i=0;i<path.size()-1;i++){
-			distance+=this.getDirectDistance(path.get(i), path.get(i+1));
-		}
+		if(path!=null) {
+			for (int i = 0; i < path.size() - 1; i++) {
+				distance += this.getDirectDistance(path.get(i), path.get(i + 1));
+			}
+		}else
+			distance=99999;
 		return distance;
 	}
 
@@ -346,9 +360,50 @@ public class Graph {
 		}
 	}
 
+	public void marginal_distance_init(){//跨域controller专用函数，用于初始化marginalSwitchDistance数组
+		for(int i=0;i<10;i++){
+			for(int j=0;j<10;j++){
+				marginalSwitchDistance[i][j]=this.getDelay(MarginalSwitch[(i/2)][(i%2)],MarginalSwitch[(j/2)][(j%2)]);
+			}
+		}
+	}
+
 	public void crossDomianRequestProcess(){//对跨域数据流和域内数据流请求进行一次划分，为下面的跨域数据流分割做准备,将跨域数据流请求写入crossDomainFlowRequestListFile文件中，将域内数据流请求写入InDomainFlowRequestListFile文件中
 		for(Flow_request tmp_request:this.flowRequestList){
 			if(tmp_request.cross_domain_flag==true){
+				int[] dis=new int[4];
+				dis[0]=this.getDelay(tmp_request.src_id,localMarginalSwitch[0])+marginalSwitchDistance[tmp_request.src_domain*2][tmp_request.dst_domain*2];
+				dis[1]=this.getDelay(tmp_request.src_id,localMarginalSwitch[0])+marginalSwitchDistance[tmp_request.src_domain*2][tmp_request.dst_domain*2+1];
+				dis[2]=this.getDelay(tmp_request.src_id,localMarginalSwitch[1])+marginalSwitchDistance[tmp_request.src_domain*2+1][tmp_request.dst_domain*2];
+				dis[3]=this.getDelay(tmp_request.src_id,localMarginalSwitch[1])+marginalSwitchDistance[tmp_request.src_domain*2+1][tmp_request.dst_domain*2+1];
+				int min_number=0;
+				int min_value=dis[0];
+				for(int i=1;i<4;i++){
+					if(dis[i]<min_value){
+						min_number=i;
+						min_value=dis[i];
+					}
+				}
+				switch(min_number){
+					case 0:
+						tmp_request.src_id=MarginalSwitch[tmp_request.src_domain][0];
+						tmp_request.dst_id=MarginalSwitch[tmp_request.dst_domain][0];
+						break;
+					case 1:
+						tmp_request.src_id=MarginalSwitch[tmp_request.src_domain][0];
+						tmp_request.dst_id=MarginalSwitch[tmp_request.dst_domain][1];
+						break;
+					case 2:
+						tmp_request.src_id=MarginalSwitch[tmp_request.src_domain][1];
+						tmp_request.dst_id=MarginalSwitch[tmp_request.dst_domain][0];
+						break;
+					case 3:
+						tmp_request.src_id=MarginalSwitch[tmp_request.src_domain][1];
+						tmp_request.dst_id=MarginalSwitch[tmp_request.dst_domain][1];
+						break;
+					default:
+						break;
+				}
 				this.crossDomainFlowRequestList.add(tmp_request);
 			}else if(tmp_request.cross_domain_flag==false){
 				this.InsideDomainFlowRequestList.add(tmp_request);
@@ -534,7 +589,7 @@ public class Graph {
 					tm.min_bandwidth = 0;
 				}
 			if(tm.fr_id.endsWith("#")){
-					String content=tm.fr_id.substring(0,tm.fr_id.length()-2)+" "+tm.min_bandwidth+"\n";
+					String content=tm.fr_id.substring(0,tm.fr_id.length()-2)+" "+tm.bandwidth_request+" "+tm.min_bandwidth+"\n";
 				}
 			}
 			file_write.close();
@@ -844,71 +899,37 @@ public class Graph {
 	
 	
 	public static void main(String[] args) throws FileNotFoundException {
-		Graph g1=new Graph(GraphLinkFile,GraphNodeFile);
-		
-		/*
-		for(Node node_print:g1.nodelist){
-			System.out.println("Node id:"+node_print.ID+"  "+"Adjcant_Node_Number:"+node_print.adjcent_list.size()+"\n");
-			
-		}
-		if(g1.getNode("00:00:00:00:00:00:00:0a")!=null){//测试getNode函数的性能
-			System.out.println("Find the node.");
-		}
-		else
-			System.out.println("Didn't find the node.\n\n");
-		
-		
-		int[][] output_matrix=g1.constructDelayAdjMatrix();//测试邻接矩阵的建立情况，成功
-		for(int m=0;m<output_matrix.length;m++){
-			System.out.print("[");
-			for(int n=0;n<output_matrix[m].length;n++){
-				System.out.print(output_matrix[m][n]+" ");
+
+		Graph g_abstract=new Graph(MarginalLinksFilePath,MarginalNodesFilePath);//存储抽象后的节点和links,即跨域controller的topo信息
+		g_abstract.marginal_distance_init();
+		/*for(int i=0;i<g_abstract.marginalSwitchDistance.length;i++){
+			for(int j=0;j<g_abstract.marginalSwitchDistance[i].length;j++){
+				System.out.print(g_abstract.marginalSwitchDistance[i][j]+" ");
 			}
-			System.out.println("]\n");
-		}
-		
-		ArrayList<Integer> out=g1.dijkstra_prototype(3);//测试单域情况中，路由算法的有效性
-		for(Integer i:out){
-			System.out.print(i+"->");
-			
-		}
-		System.out.println("End");
-		
-		g1.printPath("00:00:00:00:00:00:00:03", "00:00:da:c5:01:a3:44:48");
-		
-		System.out.println("");
-		
-		
-		int t=g1.getDistance("00:00:00:00:00:00:00:03", "00:00:da:c5:01:a3:44:48");
-		System.out.println("Distance from source to destination is:"+t);
-		*/
-		/*
-		g1.collectFlowRequest("F:\\java code\\FL_PlugIn Project\\Floodlight_plugin\\src\\Flow Request.txt");
-		for(Flow_request t:g1.flowRequestList){
-			g1.dijkstra_flow_request_path_write(t);
-			t.showAllocatedPath();
-		}
-		*/
-		long start=Calendar.getInstance().getTimeInMillis();//用于测试系统TE时间
+			System.out.println();
+		}*/
+//		Graph g1=new Graph(GraphLinkFile,GraphNodeFile);
+/*		long start=Calendar.getInstance().getTimeInMillis();//用于测试系统TE时间
 		g1.FlowRequestFileGenerate_2(10000);//产生数据流文件的函数，如果希望沿用之前的数据流文件，则不需要运行此函数
-		//g1.collectFlowRequest("E:\\代码\\java\\FloodlightPlugin\\src\\Flow Request.txt");
-	 	//g1.localTE();
-//		for(int i=0;i<10;i++) {
-//			g1.run();
-//			g1.run();
-			g1.run();
-//		}
+		g1.run();
 		long end=Calendar.getInstance().getTimeInMillis();
-		System.out.println("Run time :"+(double)(end-start)/1000);//用于测试系统TE时间
-//		g1.test();
-	 	//System.out.println("END NOW");
-	 	/*
-		for(Flow_request t:g1.flowRequestList){
-			System.out.println(t);
-		}
-		*/
-		//g1.localTE();
+		System.out.println("Run time :"+(double)(end-start)/1000);//用于测试系统TE时间*/
+
+
+		//g_abstract.getDelay(MarginalSwitch[0][0],MarginalSwitch[2][0]);
+/*		for(Node tmp:g1.nodelist){
+			System.out.println(tmp.ID);
+		}*/
+//		int tmp=g_abstract.getDelay(MarginalSwitch[4][0],MarginalSwitch[2][1]);
+//		System.out.println(tmp);
+		/*int[][] tmp=g_abstract.constructDelayAdjMatrix();
+		for(int i=0;i<tmp.length;i++){
+			for(int j=0;j<tmp[i].length;j++){
+				System.out.print(tmp[i][j]);
+			}
+			System.out.println();
+		}*/
 	}
-	
-	
+
+
 }
