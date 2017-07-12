@@ -365,6 +365,8 @@ public class Graph {
 		}
 	}
 
+
+
 	public void marginal_distance_init(){//跨域controller专用函数，用于初始化marginalSwitchDistance数组
 		for(int i=0;i<10;i++){
 			for(int j=0;j<10;j++){
@@ -393,18 +395,22 @@ public class Graph {
 					case 0:
 						tmp_request.src_id=MarginalSwitch[tmp_request.src_domain][0];
 						tmp_request.dst_id=MarginalSwitch[tmp_request.dst_domain][0];
+						this.InsideDomainFlowRequestList.add(new Flow_request(tmp_request.fr_id,tmp_request.src_id,MarginalSwitch[tmp_request.src_domain][0],tmp_request.bandwidth_request,tmp_request.delay_request,tmp_request.priority));
 						break;
 					case 1:
 						tmp_request.src_id=MarginalSwitch[tmp_request.src_domain][0];
 						tmp_request.dst_id=MarginalSwitch[tmp_request.dst_domain][1];
+						this.InsideDomainFlowRequestList.add(new Flow_request(tmp_request.fr_id,tmp_request.src_id,MarginalSwitch[tmp_request.src_domain][0],tmp_request.bandwidth_request,tmp_request.delay_request,tmp_request.priority));
 						break;
 					case 2:
 						tmp_request.src_id=MarginalSwitch[tmp_request.src_domain][1];
 						tmp_request.dst_id=MarginalSwitch[tmp_request.dst_domain][0];
+						this.InsideDomainFlowRequestList.add(new Flow_request(tmp_request.fr_id,tmp_request.src_id,MarginalSwitch[tmp_request.src_domain][1],tmp_request.bandwidth_request,tmp_request.delay_request,tmp_request.priority));
 						break;
 					case 3:
 						tmp_request.src_id=MarginalSwitch[tmp_request.src_domain][1];
 						tmp_request.dst_id=MarginalSwitch[tmp_request.dst_domain][1];
+						this.InsideDomainFlowRequestList.add(new Flow_request(tmp_request.fr_id,tmp_request.src_id,MarginalSwitch[tmp_request.src_domain][1],tmp_request.bandwidth_request,tmp_request.delay_request,tmp_request.priority));
 						break;
 					default:
 						break;

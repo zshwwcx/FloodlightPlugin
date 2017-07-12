@@ -21,7 +21,7 @@ class Flow_request{
 	public static int default_priority=1;
 	
 	
-	public Flow_request(String id,String src,String dst,int bandwidth,int delay,int priority){
+	public Flow_request(String id,String src,String dst,float bandwidth,int delay,int priority){
 		this.fr_id=id;
 		this.src_id=src;
 		this.dst_id=dst;
@@ -47,8 +47,8 @@ class Flow_request{
 		}else{
 			src_domain=0;
 		}
-		String dst_id_substring=dst_id.substring(21);
-		int temp2=Integer.parseInt(dst_id_substring);
+		String dst_id_substring=dst_id.substring(18,20)+dst_id.substring(21);
+		int temp2=Integer.parseInt(dst_id_substring,16);
 		if(temp2>=1&&temp2<=150){
 			dst_domain=1;
 		}else if(temp2>=151&&temp2<=286){
